@@ -1,0 +1,18 @@
+{
+  "name": "solana-multiwallet-swap",
+  "version": "0.1.0",
+  "description": "Multi-wallet swap UI for Solana devnet using Jupiter Aggregator (demo)",
+  "scripts": {
+    "start": "npx http-server -c-1 -p 8080",
+    "smoke": "node scripts/smoke_test.js",
+    "install-deps": "npm install",
+    "win-install": "powershell -ExecutionPolicy Bypass -File install_and_smoke.ps1"
+  },
+  "dependencies": {
+    "@solana/web3.js": "^1.95.2",
+    "bs58": "^5.0.0",
+    "node-fetch": "^3.3.2"
+  },
+  "author": "",
+  "license": "MIT"
+}

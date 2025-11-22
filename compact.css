@@ -1,0 +1,298 @@
+/* COMPACT OVERRIDE - Add this to make everything smaller */
+
+.app-container {
+	padding: 5px !important;
+}
+
+.top-header {
+	padding: 8px 10px !important;
+	margin-bottom: 6px !important;
+	border-radius: 8px !important;
+}
+
+.main-logo {
+	font-size: 16px !important;
+}
+
+.subtitle {
+	font-size: 8px !important;
+	margin-top: 2px !important;
+}
+
+.stat-box {
+	padding: 4px 6px !important;
+	border-radius: 5px !important;
+}
+
+.stat-label {
+	font-size: 7px !important;
+	margin-bottom: 1px !important;
+}
+
+.stat-value {
+	font-size: 11px !important;
+}
+
+.main-layout {
+	gap: 6px !important;
+}
+
+.panel-section {
+	padding: 8px !important;
+	margin-bottom: 6px !important;
+	border-radius: 8px !important;
+}
+
+.panel-title {
+	font-size: 12px !important;
+	margin-bottom: 5px !important;
+}
+
+.config-grid {
+	gap: 5px !important;
+	margin-bottom: 6px !important;
+}
+
+.form-field label {
+	font-size: 8px !important;
+	margin-bottom: 2px !important;
+}
+
+.input-text {
+	padding: 4px 6px !important;
+	font-size: 9px !important;
+	border-radius: 4px !important;
+	border-width: 1px !important;
+}
+
+.btn-mini {
+	padding: 3px 6px !important;
+	font-size: 8px !important;
+	border-radius: 4px !important;
+}
+
+.quick-btn {
+	padding: 2px 5px !important;
+	font-size: 8px !important;
+}
+
+.summary-card {
+	padding: 5px !important;
+	border-radius: 5px !important;
+}
+
+.summary-icon {
+	font-size: 14px !important;
+	margin-bottom: 1px !important;
+}
+
+.summary-label {
+	font-size: 7px !important;
+	margin-bottom: 1px !important;
+}
+
+.summary-value {
+	font-size: 10px !important;
+	font-weight: 600 !important;
+}
+
+.token-display-card {
+	padding: 6px !important;
+	border-radius: 5px !important;
+}
+
+.token-display-label {
+	font-size: 7px !important;
+	margin-bottom: 2px !important;
+}
+
+.token-display-address {
+	font-size: 8px !important;
+}
+
+.token-display-name {
+	font-size: 7px !important;
+}
+
+.token-swap-arrow {
+	font-size: 16px !important;
+	padding: 0 5px !important;
+}
+
+.btn-execute {
+	padding: 8px 12px !important;
+	font-size: 11px !important;
+	border-radius: 6px !important;
+}
+
+.button-row {
+	gap: 5px !important;
+	margin-top: 6px !important;
+}
+
+.wallet-item {
+	padding: 5px !important;
+	border-radius: 5px !important;
+	margin-bottom: 4px !important;
+}
+
+.wallet-info {
+	font-size: 9px !important;
+}
+
+.wallet-address {
+	font-size: 8px !important;
+}
+
+.wallet-balance {
+	font-size: 9px !important;
+}
+
+.master-wallet-section {
+	padding: 8px !important;
+	margin-bottom: 8px !important;
+	border-radius: 6px !important;
+}
+
+.master-wallet-title {
+	font-size: 11px !important;
+}
+
+.master-wallet-icon {
+	font-size: 14px !important;
+}
+
+.master-info-row {
+	padding: 4px !important;
+	font-size: 8px !important;
+}
+
+.master-label {
+	font-size: 8px !important;
+}
+
+.master-value {
+	font-size: 8px !important;
+}
+
+.range-buttons {
+	gap: 4px !important;
+	margin-bottom: 6px !important;
+}
+
+.range-btn {
+	padding: 3px 6px !important;
+	font-size: 8px !important;
+}
+
+.dex-panel-bottom {
+	padding: 10px !important;
+	margin-top: 6px !important;
+	border-radius: 8px !important;
+}
+
+.dex-stat-card {
+	padding: 5px !important;
+	border-radius: 5px !important;
+}
+
+.stat-label {
+	font-size: 7px !important;
+}
+
+.warning-banner {
+	padding: 5px !important;
+	font-size: 9px !important;
+	margin-bottom: 6px !important;
+}
+
+.trade-summary-grid {
+	gap: 5px !important;
+	margin-bottom: 6px !important;
+}
+
+.token-display-section {
+	gap: 6px !important;
+	margin-bottom: 6px !important;
+}
+
+.distribution-input-group {
+	gap: 4px !important;
+}
+
+.status-display {
+	max-height: 150px !important;
+	font-size: 9px !important;
+	padding: 8px !important;
+}
+
+.checkbox-item {
+	font-size: 8px !important;
+	padding: 4px !important;
+}
+
+.checkbox-item span {
+	font-size: 8px !important;
+}
+
+.header-stats {
+	gap: 8px !important;
+}
+
+.token-input-group {
+	gap: 4px !important;
+}
+
+.quick-tokens {
+	gap: 3px !important;
+	margin-top: 3px !important;
+}
+
+/* Make execute buttons more prominent but compact */
+.btn-buy, .btn-sell, .btn-stop {
+	font-weight: 700 !important;
+	text-transform: uppercase !important;
+	letter-spacing: 0.5px !important;
+	transition: all 0.3s ease !important;
+}
+
+.btn-buy:hover {
+	transform: translateY(-2px) !important;
+	box-shadow: 0 0 30px rgba(20, 241, 149, 0.6) !important;
+}
+
+.btn-sell:hover {
+	transform: translateY(-2px) !important;
+	box-shadow: 0 0 30px rgba(255, 56, 100, 0.6) !important;
+}
+
+.btn-stop:hover {
+	transform: translateY(-2px) !important;
+	box-shadow: 0 0 30px rgba(255, 184, 0, 0.6) !important;
+}
+
+/* Improve wallet list visibility */
+.wallet-list {
+	max-height: 300px !important;
+}
+
+/* Better spacing for master wallet actions */
+.master-wallet-actions {
+	margin-top: 6px !important;
+}
+
+.master-wallet-header {
+	margin-bottom: 6px !important;
+	padding-bottom: 4px !important;
+}
+
+/* Compact phantom wallet section */
+#phantomWalletInfo {
+	font-size: 8px !important;
+	padding: 4px !important;
+}
+
+#phantomConnectBtn, #phantomDisconnectBtn {
+	font-size: 9px !important;
+	padding: 4px 8px !important;
+}

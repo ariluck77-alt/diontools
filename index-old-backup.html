@@ -1,0 +1,908 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<title>DIONTOOLS.COM - Solana Multi-Wallet Trading Platform | Jupiter Aggregator | DeFi Trading Suite</title>
+	
+	<!-- SEO Meta Tags -->
+	<meta name="description" content="Professional Solana multi-wallet trading platform with Phantom integration, Jupiter Aggregator, real-time DEX analytics. Trade with up to 99 wallets simultaneously. Advanced DeFi trading tools.">
+	<meta name="keywords" content="Solana trading, multi-wallet trading, Jupiter Aggregator, Phantom wallet, DeFi trading, Solana DeFi, crypto trading platform, DEX trading, Solana tools, batch trading">
+	<meta name="author" content="DIONTOOLS">
+	<meta name="robots" content="index, follow">
+	<meta name="googlebot" content="index, follow">
+	<meta name="google-site-verification" content="P2KHTPR-Xq2ZZCOrIesMtFEZP-U0zRNNrKRdC6mF9k4" />
+	
+	<!-- Open Graph Meta Tags -->
+	<meta property="og:title" content="DIONTOOLS - Solana Pro Trading Suite">
+	<meta property="og:description" content="Professional multi-wallet trading platform for Solana. Jupiter Aggregator integration, real-time analytics, Phantom wallet support.">
+	<meta property="og:type" content="website">
+	<meta property="og:url" content="https://ariluck77-alt.github.io/diontools/">
+	<meta property="og:site_name" content="DIONTOOLS">
+	
+	<!-- Twitter Card Meta Tags -->
+	<meta name="twitter:card" content="summary_large_image">
+	<meta name="twitter:title" content="DIONTOOLS - Solana Pro Trading Suite">
+	<meta name="twitter:description" content="Professional multi-wallet trading platform for Solana with Jupiter Aggregator and real-time DEX analytics.">
+	
+	<!-- Canonical URL -->
+	<link rel="canonical" href="https://ariluck77-alt.github.io/diontools/">
+	
+	<link rel="stylesheet" href="style.css">
+	<link rel="stylesheet" href="compact.css">
+	<link rel="stylesheet" href="red-black-theme.css">
+	<link rel="preconnect" href="https://fonts.googleapis.com">
+	<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+	<script src="https://unpkg.com/@solana/web3.js@1.95.2/lib/index.iife.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+	<script src="https://cdn.jsdelivr.net/npm/lightweight-charts@4.1.0/dist/lightweight-charts.standalone.production.js"></script>
+</head>
+<body>
+	<div class="app-container">
+		<!-- Top Header -->
+		<div class="top-header">
+			<div class="logo-section">
+				<h1 class="main-logo">⚡ WWW.DIONTOOLS.COM</h1>
+				<p class="subtitle">Solana Pro Trading Suite | Multi-Wallet Platform | Jupiter Aggregator</p>
+			</div>
+			<div class="header-stats">
+				<div class="stat-box">
+					<span class="stat-label">Total Wallets</span>
+					<span class="stat-value" id="totalWalletsCount">0</span>
+				</div>
+				<div class="stat-box">
+					<span class="stat-label">Selected</span>
+					<span class="stat-value" id="selectedWalletsCount">0</span>
+				</div>
+				<div class="stat-box">
+					<span class="stat-label">Total Balance</span>
+					<span class="stat-value" id="totalBalanceDisplay">0 SOL</span>
+				</div>
+			</div>
+		</div>
+
+		<div class="warning-banner">
+			⚠️ PRODUCTION MODE: Real mainnet transactions. Double-check everything before executing!
+		</div>
+
+		<!-- Main Layout -->
+		<div class="main-layout">
+			<!-- CENTER: Wallet Manager -->
+		<div class="center-panel">
+			<!-- Execute Section - AT THE TOP -->
+			<div class="panel-section execute-panel">
+				<h3 class="panel-title">🚀 Execute Trades</h3>
+				
+				<!-- Token Configuration -->
+				<div style="background: linear-gradient(135deg, rgba(153, 69, 255, 0.15), rgba(0, 212, 255, 0.15)); border: 2px solid rgba(153, 69, 255, 0.3); border-radius: 12px; padding: 15px; margin-bottom: 15px;">
+					<h4 style="font-size: 14px; margin-bottom: 12px; color: #14F195; cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleTradeSettings()">
+						<span>⚙️ Trade Settings</span>
+						<span id="tradeSettingsToggle" style="font-size: 18px;">▼</span>
+					</h4>
+					<div id="tradeSettingsContent" class="config-grid">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>📊 Monitor Token</label>
+							<div style="display: flex; gap: 8px;">
+								<input type="text" id="monitorTokenAddress" placeholder="Token address for live DEX data..." class="input-text" style="flex: 1;">
+								<button onclick="startDexMonitoring()" class="btn-mini btn-primary">Monitor</button>
+							</div>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🔴 Sell Token</label>
+							<div class="token-input-group">
+								<input type="text" id="fromToken" placeholder="Token address..." class="input-text token-input">
+								<div class="quick-tokens">
+									<button onclick="setToken('fromToken', 'So11111111111111111111111111111111111111112')" class="quick-btn">SOL</button>
+									<button onclick="setToken('fromToken', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')" class="quick-btn">USDC</button>
+									<button onclick="setToken('fromToken', 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')" class="quick-btn">USDT</button>
+								</div>
+							</div>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🟢 Buy Token</label>
+							<div class="token-input-group">
+								<input type="text" id="toToken" placeholder="Token address..." class="input-text token-input">
+								<div class="quick-tokens">
+									<button onclick="setToken('toToken', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')" class="quick-btn">USDC</button>
+									<button onclick="setToken('toToken', 'So11111111111111111111111111111111111111112')" class="quick-btn">SOL</button>
+									<button onclick="setToken('toToken', 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')" class="quick-btn">USDT</button>
+								</div>
+							</div>
+						</div>
+						<div class="form-field">
+							<label>💰 Amount</label>
+							<input type="number" id="tradeAmount" value="0.01" step="0.0001" min="0.0001" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>📊 Slippage %</label>
+							<input type="number" id="slippageBps" value="20" step="0.1" min="0.1" max="50" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>⚡ Priority</label>
+							<input type="number" id="priorityFee" value="0.0001" step="0.0001" min="0" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>🔢 Compute</label>
+							<input type="number" id="computeUnits" value="200000" step="10000" min="100000" max="1400000" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="justify-content: flex-start; padding: 8px; background: rgba(14, 165, 233, 0.1); border-radius: 6px;">
+								<input type="checkbox" id="autoMonitorToken" checked>
+								<span>Auto-monitor token</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="justify-content: flex-start; padding: 8px; background: rgba(255, 184, 0, 0.1); border-radius: 6px;">
+								<input type="checkbox" id="mevProtection">
+								<span>MEV Protection</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="justify-content: flex-start; padding: 8px; background: rgba(20, 241, 149, 0.1); border-radius: 6px;">
+								<input type="checkbox" id="retryFailed" checked>
+								<span>Auto-retry failed</span>
+							</label>
+						</div>
+					</div>
+				</div>
+				
+				<!-- Summary -->
+				<div class="trade-summary-grid">
+					<div class="summary-card">
+						<div class="summary-icon">💼</div>
+						<div class="summary-details">
+							<div class="summary-label">Selected</div>
+							<div class="summary-value" id="executeSelectedCount">0</div>
+						</div>
+					</div>
+					<div class="summary-card">
+						<div class="summary-icon">📊</div>
+						<div class="summary-details">
+							<div class="summary-label">SOL per Wallet</div>
+							<div class="summary-value" id="displayAmountPerWallet">0.01 SOL</div>
+						</div>
+					</div>
+					<div class="summary-card">
+						<div class="summary-icon">💰</div>
+						<div class="summary-details">
+							<div class="summary-label">Total SOL</div>
+							<div class="summary-value" id="executeTotalValue">0 SOL</div>
+						</div>
+					</div>
+					<div class="summary-card">
+						<div class="summary-icon">🪙</div>
+						<div class="summary-details">
+							<div class="summary-label">Est. Tokens</div>
+							<div class="summary-value" id="displayEstTokens">Calculating...</div>
+						</div>
+					</div>
+				</div>
+
+				<!-- Simple Token Selection -->
+				<div style="background: linear-gradient(135deg, rgba(20, 241, 149, 0.15), rgba(0, 212, 255, 0.15)); border: 2px solid rgba(20, 241, 149, 0.3); border-radius: 8px; padding: 12px; margin-bottom: 10px;">
+					<div style="display: grid; grid-template-columns: 1fr auto; gap: 8px; align-items: center;">
+						<div style="flex: 1;">
+							<label style="font-size: 10px; color: #14F195; font-weight: 600; margin-bottom: 4px; display: block;">🪙 TOKEN TO BUY</label>
+							<input type="text" id="quickBuyToken" placeholder="Paste token address here..." class="input-text" style="width: 100%;">
+						</div>
+						<div>
+							<label style="font-size: 10px; color: #14F195; font-weight: 600; margin-bottom: 4px; display: block;">💰 SOL AMOUNT</label>
+							<input type="number" id="quickBuyAmount" value="0.01" step="0.0001" min="0.0001" class="input-text" style="width: 100px;">
+						</div>
+					</div>
+					<div style="display: flex; gap: 4px; margin-top: 6px; flex-wrap: wrap;">
+						<button onclick="document.getElementById('quickBuyAmount').value='0.0001'; document.getElementById('tradeAmount').value='0.0001'; updateTradeDisplay();" class="quick-btn" style="background: rgba(153, 69, 255, 0.2); border: 1px solid rgba(153, 69, 255, 0.4);">🧪 0.0001</button>
+						<button onclick="document.getElementById('quickBuyAmount').value='0.001'; document.getElementById('tradeAmount').value='0.001'; updateTradeDisplay();" class="quick-btn" style="background: rgba(153, 69, 255, 0.2); border: 1px solid rgba(153, 69, 255, 0.4);">💎 0.001</button>
+						<button onclick="document.getElementById('quickBuyAmount').value='0.01'; document.getElementById('tradeAmount').value='0.01'; updateTradeDisplay();" class="quick-btn" style="background: rgba(0, 212, 255, 0.2); border: 1px solid rgba(0, 212, 255, 0.4);">💎 0.01</button>
+						<button onclick="document.getElementById('quickBuyAmount').value='0.05'; document.getElementById('tradeAmount').value='0.05'; updateTradeDisplay();" class="quick-btn" style="background: rgba(0, 212, 255, 0.2); border: 1px solid rgba(0, 212, 255, 0.4);">💵 0.05</button>
+						<button onclick="document.getElementById('quickBuyAmount').value='0.1'; document.getElementById('tradeAmount').value='0.1'; updateTradeDisplay();" class="quick-btn" style="background: rgba(20, 241, 149, 0.2); border: 1px solid rgba(20, 241, 149, 0.4);">💰 0.1</button>
+						<button onclick="document.getElementById('quickBuyAmount').value='0.5'; document.getElementById('tradeAmount').value='0.5'; updateTradeDisplay();" class="quick-btn" style="background: rgba(20, 241, 149, 0.2); border: 1px solid rgba(20, 241, 149, 0.4);">💸 0.5</button>
+						<button onclick="document.getElementById('quickBuyAmount').value='1'; document.getElementById('tradeAmount').value='1'; updateTradeDisplay();" class="quick-btn" style="background: rgba(255, 184, 0, 0.2); border: 1px solid rgba(255, 184, 0, 0.4);">🔥 1 SOL</button>
+					</div>
+					<div style="margin-top: 6px; font-size: 9px; color: #9ca3af;">
+						💡 Each wallet buys with this SOL amount
+					</div>
+				</div>
+
+				<!-- Tokens -->
+				<div class="token-display-section">
+					<div class="token-display-card from-token">
+						<div class="token-display-label">🔴 SELL</div>
+						<div class="token-display-address" id="displayFromToken">Not set</div>
+						<div class="token-display-name" id="displayFromTokenName">-</div>
+					</div>
+					<div class="token-swap-arrow">➜</div>
+					<div class="token-display-card to-token">
+						<div class="token-display-label">🟢 BUY</div>
+						<div class="token-display-address" id="displayToToken">Not set</div>
+						<div class="token-display-name" id="displayToTokenName">-</div>
+					</div>
+				</div>
+
+				<!-- Execute -->
+				<div class="button-row">
+					<button onclick="executeTradeForSelected(true)" class="btn-execute btn-buy" style="box-shadow: 0 0 20px rgba(20, 241, 149, 0.4);">🚀 BUY NOW</button>
+					<button onclick="executeTradeForSelected(false)" class="btn-execute btn-sell" style="box-shadow: 0 0 20px rgba(255, 56, 100, 0.4);">💸 SELL NOW</button>
+					<button onclick="stopAllTrades()" class="btn-execute btn-stop" style="box-shadow: 0 0 20px rgba(255, 184, 0, 0.4);">⏹️ STOP ALL</button>
+				</div>
+				<div id="tradeStatusDisplay" class="status-display"></div>
+			</div>
+
+			<!-- Token Sniping Panel -->
+			<div class="panel-section" style="background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(139, 0, 0, 0.1)); border: 2px solid rgba(255, 0, 0, 0.3);">
+				<h3 class="panel-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleSnipingPanel()">
+					<span>🎯 Token Sniping Bot</span>
+					<span id="snipingToggle">▼</span>
+				</h3>
+				<div id="snipingContent">
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+						<div class="summary-card" style="background: rgba(255, 0, 0, 0.2);">
+							<div class="summary-label">Sniping Status</div>
+							<div class="summary-value" id="snipingStatus">🔴 Stopped</div>
+						</div>
+						<div class="summary-card" style="background: rgba(255, 0, 0, 0.2);">
+							<div class="summary-label">Tokens Sniped</div>
+							<div class="summary-value" id="snipedCount">0</div>
+						</div>
+					</div>
+					
+					<div class="config-grid">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>⚡ Auto-Snipe Mode</label>
+							<select id="snipeMode" class="input-text">
+								<option value="raydium">Raydium New Pools</option>
+								<option value="pumpfun">Pump.fun New Tokens</option>
+								<option value="both">Both Raydium + Pump.fun</option>
+							</select>
+						</div>
+						<div class="form-field">
+							<label>💰 Snipe Amount (SOL)</label>
+							<input type="number" id="snipeAmount" value="0.01" step="0.01" min="0.001" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>💎 Min Liquidity (SOL)</label>
+							<input type="number" id="minLiquidity" value="5" step="1" min="0" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>👥 Min Holders</label>
+							<input type="number" id="minHolders" value="10" step="1" min="0" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>🎯 Max Buy Tax %</label>
+							<input type="number" id="maxBuyTax" value="10" step="1" min="0" max="100" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(255, 0, 0, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="autoSellProfit" checked>
+								<span>🎯 Auto-sell at profit %:</span>
+								<input type="number" id="profitTarget" value="50" step="10" min="10" max="1000" style="width: 60px; margin-left: 8px;" class="input-text">
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(255, 0, 0, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="autoStopLoss" checked>
+								<span>🛑 Auto stop-loss at %:</span>
+								<input type="number" id="stopLossPercent" value="-30" step="5" min="-90" max="-10" style="width: 60px; margin-left: 8px;" class="input-text">
+							</label>
+						</div>
+					</div>
+					
+					<div class="button-row" style="margin-top: 15px;">
+						<button onclick="startSniping()" class="btn-execute" style="flex: 1; background: linear-gradient(135deg, #FF0000, #8B0000);">🎯 START SNIPING</button>
+						<button onclick="stopSniping()" class="btn-execute btn-stop" style="flex: 1;">⏹️ STOP</button>
+					</div>
+					
+					<div id="snipingLog" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 10px; font-family: monospace;">
+						<div style="color: #14F195;">💡 Sniping bot ready. Click START to begin monitoring...</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Copy Trading Panel -->
+			<div class="panel-section" style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(153, 69, 255, 0.1)); border: 2px solid rgba(0, 212, 255, 0.3);">
+				<h3 class="panel-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleCopyTradingPanel()">
+					<span>📋 Copy Trading Bot</span>
+					<span id="copyTradingToggle">▼</span>
+				</h3>
+				<div id="copyTradingContent">
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+						<div class="summary-card">
+							<div class="summary-label">Copy Status</div>
+							<div class="summary-value" id="copyStatus">🔴 Stopped</div>
+						</div>
+						<div class="summary-card">
+							<div class="summary-label">Trades Copied</div>
+							<div class="summary-value" id="copiedCount">0</div>
+						</div>
+					</div>
+					
+					<div class="config-grid">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🎯 Target Wallet to Copy</label>
+							<input type="text" id="targetWalletAddress" placeholder="Paste wallet address to mirror..." class="input-text">
+						</div>
+						<div class="form-field">
+							<label>💰 Copy Amount (SOL)</label>
+							<input type="number" id="copyAmount" value="0.01" step="0.01" min="0.001" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>📊 Copy Slippage %</label>
+							<input type="number" id="copySlippage" value="5" step="0.5" min="0.1" max="50" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="copyBuysOnly">
+								<span>📈 Copy BUY orders only</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="copySellsOnly">
+								<span>📉 Copy SELL orders only</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="copyDelay">
+								<span>⏱️ Delay copy by (seconds):</span>
+								<input type="number" id="copyDelaySeconds" value="0" step="1" min="0" max="60" style="width: 60px; margin-left: 8px;" class="input-text">
+							</label>
+						</div>
+					</div>
+					
+					<div class="button-row" style="margin-top: 15px;">
+						<button onclick="startCopyTrading()" class="btn-execute" style="flex: 1; background: linear-gradient(135deg, #00D4FF, #9945FF);">📋 START COPYING</button>
+						<button onclick="stopCopyTrading()" class="btn-execute btn-stop" style="flex: 1;">⏹️ STOP</button>
+					</div>
+					
+					<div id="copyTradingLog" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 10px; font-family: monospace;">
+						<div style="color: #00D4FF;">💡 Copy trading ready. Enter target wallet and click START...</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Price Alerts Panel -->
+			<div class="panel-section" style="background: linear-gradient(135deg, rgba(20, 241, 149, 0.1), rgba(0, 212, 255, 0.1)); border: 2px solid rgba(20, 241, 149, 0.3);">
+				<h3 class="panel-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="togglePriceAlertsPanel()">
+					<span>🔔 Price Alerts & Auto-Sell</span>
+					<span id="priceAlertsToggle">▼</span>
+				</h3>
+				<div id="priceAlertsContent">
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+						<div class="summary-card">
+							<div class="summary-label">Active Alerts</div>
+							<div class="summary-value" id="activeAlertsCount">0</div>
+						</div>
+						<div class="summary-card">
+							<div class="summary-label">Alerts Triggered</div>
+							<div class="summary-value" id="triggeredAlertsCount">0</div>
+						</div>
+					</div>
+					
+					<div class="config-grid">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🎯 Token Address to Monitor</label>
+							<input type="text" id="alertTokenAddress" placeholder="Token address for price alerts..." class="input-text">
+						</div>
+						<div class="form-field">
+							<label>📈 High Alert Price ($)</label>
+							<input type="number" id="highAlertPrice" placeholder="0.001" step="0.0001" min="0" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>📉 Low Alert Price ($)</label>
+							<input type="number" id="lowAlertPrice" placeholder="0.0001" step="0.0001" min="0" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(20, 241, 149, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="autoSellOnHigh" checked>
+								<span>💰 Auto-sell when HIGH price reached</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(255, 56, 100, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="autoBuyOnLow">
+								<span>💎 Auto-buy when LOW price reached</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(153, 69, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="browserNotifications" checked>
+								<span>🔔 Browser notifications</span>
+							</label>
+						</div>
+					</div>
+					
+					<div class="button-row" style="margin-top: 15px;">
+						<button onclick="addPriceAlert()" class="btn-execute" style="flex: 1; background: linear-gradient(135deg, #14F195, #00D4FF);">➕ ADD ALERT</button>
+						<button onclick="clearAllAlerts()" class="btn-execute btn-stop" style="flex: 1;">🗑️ CLEAR ALL</button>
+					</div>
+					
+					<div id="alertsList" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 10px;">
+						<div style="color: #14F195;">💡 No alerts set. Add token address and price targets above.</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Volume Spike Detection Panel -->
+			<div class="panel-section" style="background: linear-gradient(135deg, rgba(255, 184, 0, 0.1), rgba(255, 56, 100, 0.1)); border: 2px solid rgba(255, 184, 0, 0.3);">
+				<h3 class="panel-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleVolumePanel()">
+					<span>📊 Volume Spike Detection</span>
+					<span id="volumeToggle">▼</span>
+				</h3>
+				<div id="volumeContent">
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+						<div class="summary-card">
+							<div class="summary-label">Monitoring</div>
+							<div class="summary-value" id="volumeMonitorStatus">🔴 Stopped</div>
+						</div>
+						<div class="summary-card">
+							<div class="summary-label">Spikes Detected</div>
+							<div class="summary-value" id="spikesDetected">0</div>
+						</div>
+					</div>
+					
+					<div class="config-grid">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🎯 Token to Monitor</label>
+							<input type="text" id="volumeTokenAddress" placeholder="Token address for volume monitoring..." class="input-text">
+						</div>
+						<div class="form-field">
+							<label>📊 Spike Threshold %</label>
+							<input type="number" id="spikeThreshold" value="100" step="10" min="50" max="1000" class="input-text">
+							<small style="color: #6b7280; font-size: 9px;">Trigger when volume increases by this %</small>
+						</div>
+						<div class="form-field">
+							<label>⏱️ Check Interval (sec)</label>
+							<input type="number" id="volumeCheckInterval" value="10" step="5" min="5" max="60" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(255, 184, 0, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="autoBuyOnSpike" checked>
+								<span>🚀 Auto-buy on volume spike</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(255, 184, 0, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="volumeNotifications" checked>
+								<span>🔔 Alert notifications</span>
+							</label>
+						</div>
+					</div>
+					
+					<div class="button-row" style="margin-top: 15px;">
+						<button onclick="startVolumeMonitoring()" class="btn-execute" style="flex: 1; background: linear-gradient(135deg, #FFB800, #FF3864);">📊 START MONITORING</button>
+						<button onclick="stopVolumeMonitoring()" class="btn-execute btn-stop" style="flex: 1;">⏹️ STOP</button>
+					</div>
+					
+					<div id="volumeLog" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 10px; font-family: monospace;">
+						<div style="color: #FFB800;">💡 Volume monitoring ready. Enter token and click START...</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Auto-Trading Rules Engine Panel -->
+			<div class="panel-section" style="background: linear-gradient(135deg, rgba(153, 69, 255, 0.1), rgba(255, 56, 100, 0.1)); border: 2px solid rgba(153, 69, 255, 0.3);">
+				<h3 class="panel-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleRulesPanel()">
+					<span>⚙️ Auto-Trading Rules Engine</span>
+					<span id="rulesToggle">▼</span>
+				</h3>
+				<div id="rulesContent">
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+						<div class="summary-card">
+							<div class="summary-label">Active Rules</div>
+							<div class="summary-value" id="activeRulesCount">0</div>
+						</div>
+						<div class="summary-card">
+							<div class="summary-label">Rules Executed</div>
+							<div class="summary-value" id="executedRulesCount">0</div>
+						</div>
+					</div>
+					
+					<div class="config-grid">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>📝 Rule Name</label>
+							<input type="text" id="ruleName" placeholder="e.g., Buy dip at -10%" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🎯 Token Address</label>
+							<input type="text" id="ruleTokenAddress" placeholder="Token address for rule..." class="input-text">
+						</div>
+						<div class="form-field">
+							<label>⚡ Action</label>
+							<select id="ruleAction" class="input-text" style="background: rgba(0, 0, 0, 0.3); color: white;">
+								<option value="buy">🟢 BUY</option>
+								<option value="sell">🔴 SELL</option>
+							</select>
+						</div>
+						<div class="form-field">
+							<label>💰 Amount (SOL)</label>
+							<input type="number" id="ruleAmount" value="0.01" step="0.01" min="0.001" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>📊 Condition Type</label>
+							<select id="ruleConditionType" class="input-text" style="background: rgba(0, 0, 0, 0.3); color: white;">
+								<option value="price_above">Price Above</option>
+								<option value="price_below">Price Below</option>
+								<option value="price_change">Price Change %</option>
+								<option value="volume_above">Volume Above</option>
+								<option value="time">Specific Time</option>
+							</select>
+						</div>
+						<div class="form-field">
+							<label>🎯 Condition Value</label>
+							<input type="text" id="ruleConditionValue" placeholder="e.g., 0.001 or 15%" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(153, 69, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="ruleOneTime" checked>
+								<span>🔄 Execute only once</span>
+							</label>
+						</div>
+					</div>
+					
+					<div class="button-row" style="margin-top: 15px;">
+						<button onclick="addTradingRule()" class="btn-execute" style="flex: 1; background: linear-gradient(135deg, #9945FF, #FF3864);">➕ ADD RULE</button>
+						<button onclick="clearAllRules()" class="btn-execute btn-stop" style="flex: 1;">🗑️ CLEAR ALL</button>
+					</div>
+					
+					<div id="rulesList" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 10px;">
+						<div style="color: #9945FF;">💡 No rules set. Create auto-trading rules above.</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- New Token Scanner Panel -->
+			<div class="panel-section" style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(153, 69, 255, 0.1)); border: 2px solid rgba(0, 212, 255, 0.3);">
+				<h3 class="panel-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleScannerPanel()">
+					<span>🔍 New Token Scanner</span>
+					<span id="scannerToggle">▼</span>
+				</h3>
+				<div id="scannerContent">
+					<div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+						<div class="summary-card">
+							<div class="summary-label">Scanner Status</div>
+							<div class="summary-value" id="scannerStatus">🔴 Stopped</div>
+						</div>
+						<div class="summary-card">
+							<div class="summary-label">Tokens Found</div>
+							<div class="summary-value" id="tokensFoundCount">0</div>
+						</div>
+						<div class="summary-card">
+							<div class="summary-label">Auto-Sniped</div>
+							<div class="summary-value" id="autoSnipedCount">0</div>
+						</div>
+					</div>
+					
+					<div class="config-grid">
+						<div class="form-field">
+							<label>🎯 Scanner Source</label>
+							<select id="scannerSource" class="input-text" style="background: rgba(0, 0, 0, 0.3); color: white;">
+								<option value="raydium">Raydium Pools</option>
+								<option value="pumpfun">Pump.fun Tokens</option>
+								<option value="both">Both</option>
+							</select>
+						</div>
+						<div class="form-field">
+							<label>💧 Min Liquidity ($)</label>
+							<input type="number" id="scannerMinLiq" value="5000" step="1000" min="0" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>👥 Min Holders</label>
+							<input type="number" id="scannerMinHolders" value="10" step="5" min="0" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>⏱️ Scan Interval (sec)</label>
+							<input type="number" id="scanInterval" value="10" step="5" min="5" max="60" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="autoSnipeNewTokens">
+								<span>🎯 Auto-snipe qualified tokens</span>
+							</label>
+						</div>
+					</div>
+					
+					<div class="button-row" style="margin-top: 15px;">
+						<button onclick="startTokenScanner()" class="btn-execute" style="flex: 1; background: linear-gradient(135deg, #00D4FF, #9945FF);">🔍 START SCANNER</button>
+						<button onclick="stopTokenScanner()" class="btn-execute btn-stop" style="flex: 1;">⏹️ STOP</button>
+					</div>
+					
+					<div id="scannerResults" style="margin-top: 15px; max-height: 300px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 10px;">
+						<div style="color: #00D4FF;">💡 Token scanner ready. Click START to begin scanning...</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Wallet Manager Section -->
+			<div class="panel-section wallet-manager-panel">
+					<h3 class="panel-title">💼 Wallet Manager</h3>
+					
+					<!-- Master Wallet Section -->
+					<div class="master-wallet-section">
+						<div class="master-wallet-header">
+							<span class="master-wallet-icon">👑</span>
+							<span class="master-wallet-title">Master Funding Wallet</span>
+						</div>
+						<div class="master-wallet-content">
+							<!-- Phantom Wallet Connection -->
+							<div style="margin-bottom: 10px; padding: 10px; background: rgba(171, 71, 188, 0.15); border: 2px solid rgba(171, 71, 188, 0.3); border-radius: 8px;">
+								<div style="display: flex; gap: 8px; align-items: center;">
+									<button onclick="connectPhantom()" id="phantomConnectBtn" class="btn-mini" style="flex: 1; background: linear-gradient(135deg, #AB47BC, #8E24AA); border: none; color: white; font-weight: 600;">
+										👻 Connect Phantom
+									</button>
+									<button onclick="disconnectPhantom()" id="phantomDisconnectBtn" class="btn-mini btn-danger" style="display: none;">
+										Disconnect
+									</button>
+								</div>
+								<div id="phantomWalletInfo" style="display: none; margin-top: 8px; font-size: 10px;">
+									<div style="color: #AB47BC; font-weight: 600;">Connected: <span id="phantomAddress"></span></div>
+									<div style="color: #14F195; font-weight: 600;">Balance: <span id="phantomBalance">0 SOL</span></div>
+								</div>
+							</div>
+							
+							<!-- OR divider -->
+							<div style="text-align: center; margin: 8px 0; color: #6b7280; font-size: 10px; font-weight: 600;">OR</div>
+							
+							<!-- Manual Private Key Input -->
+							<div class="master-wallet-input-group">
+								<input type="text" id="masterWalletPrivateKey" placeholder="Paste master wallet private key (base58)..." class="input-text" style="flex: 1;">
+								<button onclick="loadMasterWallet()" class="btn-mini btn-success">Load</button>
+							</div>
+							<div class="master-wallet-info" id="masterWalletInfo" style="display: none;">
+								<div class="master-info-row">
+									<span class="master-label">Address:</span>
+									<span class="master-value" id="masterWalletAddress">Not loaded</span>
+								</div>
+								<div class="master-info-row">
+									<span class="master-label">Balance:</span>
+									<span class="master-value" id="masterWalletBalance">0 SOL</span>
+								</div>
+						</div>
+						<div class="master-wallet-actions">
+							<div class="distribution-input-group">
+								<input type="number" id="distributionAmount" placeholder="Amount SOL per wallet" value="0.1" step="0.01" min="0.001" class="input-text" style="flex: 1;">
+								<button onclick="distributeToSelected()" class="btn-mini btn-success">📤 Distribute to Selected</button>
+								<button onclick="collectFromSelected()" class="btn-mini btn-primary">📥 Collect from Selected</button>
+							</div>
+							<div class="distribution-input-group" style="margin-top: 10px;">
+								<input type="number" id="totalDistributionAmount" placeholder="Total amount SOL to split equally" value="1" step="0.1" min="0.01" class="input-text" style="flex: 1;">
+								<button onclick="distributeTotalEqually()" class="btn-mini btn-success" style="flex: 2;">💎 Split Total Equally to Selected</button>
+							</div>
+						</div>
+					</div>
+					</div>
+
+					<div class="wallet-actions" style="display: flex; gap: 10px; margin-bottom: 15px; margin-top: 20px;">
+						<button onclick="document.getElementById('walletFileImport').click()" class="btn-mini btn-primary">📁 Import</button>
+						<button onclick="showGenerateDialog()" class="btn-mini btn-success">✨ Generate</button>
+						<button onclick="exportAllWallets()" class="btn-mini btn-secondary">💾 Export</button>
+					</div>
+
+					<input type="file" id="walletFileImport" accept=".json,.txt" style="display:none;" onchange="importWalletsFromFile(event)">
+
+					<div class="wallet-controls">
+						<button onclick="selectAllWallets()" class="btn-control">✓ All</button>
+						<button onclick="deselectAllWallets()" class="btn-control">✗ None</button>
+						<button onclick="selectWalletRange(0, 0)" class="btn-control" style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.3), rgba(153, 69, 255, 0.3)); border-color: rgba(0, 212, 255, 0.4);">1️⃣ First Only</button>
+						<button onclick="refreshAllWalletBalances()" class="btn-control">🔄 Refresh</button>
+						<button onclick="deleteSelectedWallets()" class="btn-control" style="background: linear-gradient(135deg, rgba(255, 56, 100, 0.3), rgba(220, 31, 255, 0.3)); border-color: rgba(255, 56, 100, 0.4);">🗑️ Delete</button>
+						<button onclick="saveAllWallets()" class="btn-control" style="background: linear-gradient(135deg, rgba(20, 241, 149, 0.3), rgba(0, 212, 255, 0.3)); border-color: rgba(20, 241, 149, 0.4);">💾 Save</button>
+					</div>
+
+					<div class="range-selection">
+						<div class="range-title">Quick Select Ranges:</div>
+						<div class="range-buttons">
+							<button onclick="selectWalletRange(0, 9)" class="btn-range">1-10</button>
+							<button onclick="selectWalletRange(10, 19)" class="btn-range">11-20</button>
+							<button onclick="selectWalletRange(20, 29)" class="btn-range">21-30</button>
+							<button onclick="selectWalletRange(30, 39)" class="btn-range">31-40</button>
+							<button onclick="selectWalletRange(40, 49)" class="btn-range">41-50</button>
+							<button onclick="selectWalletRange(50, 59)" class="btn-range">51-60</button>
+							<button onclick="selectWalletRange(60, 69)" class="btn-range">61-70</button>
+							<button onclick="selectWalletRange(70, 79)" class="btn-range">71-80</button>
+							<button onclick="selectWalletRange(80, 89)" class="btn-range">81-90</button>
+							<button onclick="selectWalletRange(90, 98)" class="btn-range">91-99</button>
+						</div>
+					</div>
+
+					<div class="wallet-list-scroll" id="walletListContainer" style="max-height: 400px;">
+						<!-- Wallet items will be generated here (1-99) -->
+						<div class="empty-state">
+							<p>📭 No wallets loaded</p>
+							<p>Import or generate wallets to start</p>
+						</div>
+				</div>
+			</div>
+
+				<!-- Live Monitor -->
+				<div class="panel-section">
+					<h3 class="panel-title">📊 Live Trading Monitor</h3>
+					<div id="liveMonitorGrid" class="monitor-grid">
+						<!-- Trading progress will appear here -->
+					</div>
+				</div>
+
+				<!-- Trading Configuration - MOVED TO BOTTOM -->
+				<div class="panel-section">
+					<h3 class="panel-title">⚙️ Trading Configuration</h3>
+					<div class="token-monitor-input">
+						<label>🎯 DEX Monitor (Auto or Manual)</label>
+						<input type="text" id="monitorTokenAddress" placeholder="Optional: paste token to monitor manually..." class="input-text" style="width:100%;">
+						<button onclick="startDexMonitoring()" class="btn-mini btn-primary" style="margin-top:8px;">🔄 Monitor This Token</button>
+						<p style="font-size: 10px; color: #6b7280; margin-top: 8px;">💡 Tip: Enable auto-monitor below to track your trades automatically</p>
+					</div>
+					<div class="config-grid" style="margin-top:15px;">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🔹 From Token Address (Paste any Solana token)</label>
+							<div class="token-input-group">
+								<input type="text" id="fromToken" placeholder="Paste token address or use quick select..." class="input-text token-input">
+								<div class="quick-tokens">
+									<button onclick="setToken('fromToken', 'So11111111111111111111111111111111111111112')" class="quick-btn">SOL</button>
+									<button onclick="setToken('fromToken', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')" class="quick-btn">USDC</button>
+									<button onclick="setToken('fromToken', 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')" class="quick-btn">USDT</button>
+								</div>
+							</div>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🔸 To Token Address (Paste any Solana token)</label>
+							<div class="token-input-group">
+								<input type="text" id="toToken" placeholder="Paste token address or use quick select..." class="input-text token-input">
+								<div class="quick-tokens">
+									<button onclick="setToken('toToken', 'EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')" class="quick-btn">USDC</button>
+									<button onclick="setToken('toToken', 'So11111111111111111111111111111111111111112')" class="quick-btn">SOL</button>
+									<button onclick="setToken('toToken', 'Es9vMFrzaCERmJfrF4H2FYD4KCoNkY11McCe8BenwNYB')" class="quick-btn">USDT</button>
+								</div>
+							</div>
+						</div>
+						<div class="form-field">
+							<label>💰 Amount per Wallet</label>
+							<input type="number" id="tradeAmount" value="0.01" step="0.0001" min="0.0001" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>📊 Slippage (%)</label>
+							<input type="number" id="slippageBps" value="20" step="0.1" min="0.1" max="50" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="justify-content: flex-start; padding: 10px; background: rgba(14, 165, 233, 0.1); border-radius: 8px;">
+								<input type="checkbox" id="autoMonitorToken" checked>
+								<span>📈 Auto-monitor traded token on DEX screen</span>
+							</label>
+						</div>
+					</div>
+					
+					<!-- Advanced Options -->
+					<div style="margin-top: 20px; padding-top: 20px; border-top: 2px solid rgba(153, 69, 255, 0.2);">
+						<h4 style="font-size: 16px; margin-bottom: 15px; color: #14F195; display: flex; align-items: center; gap: 8px;">
+							⚡ Advanced Options
+						</h4>
+						<div class="config-grid">
+							<div class="form-field">
+								<label>⚡ Priority Fee (SOL)</label>
+								<input type="number" id="priorityFee" value="0.0001" step="0.0001" min="0" class="input-text">
+							</div>
+							<div class="form-field">
+								<label>🔢 Compute Units</label>
+								<input type="number" id="computeUnits" value="200000" step="10000" min="100000" max="1400000" class="input-text">
+							</div>
+							<div class="form-field">
+								<label>⏱️ TX Delay (ms)</label>
+								<input type="number" id="txDelay" value="100" step="50" min="0" max="5000" class="input-text">
+							</div>
+							<div class="form-field">
+								<label>🎯 Batch Size</label>
+								<input type="number" id="batchSize" value="5" step="1" min="1" max="20" class="input-text">
+							</div>
+							<div class="form-field">
+								<label>🔄 Max Retries</label>
+								<input type="number" id="maxRetries" value="3" step="1" min="0" max="10" class="input-text">
+							</div>
+							<div class="form-field">
+								<label>⏳ Timeout (sec)</label>
+								<input type="number" id="txTimeout" value="30" step="5" min="10" max="120" class="input-text">
+							</div>
+							<div class="form-field" style="grid-column: 1 / -1;">
+								<label class="checkbox-item" style="justify-content: flex-start; padding: 10px; background: rgba(255, 184, 0, 0.1); border-radius: 8px;">
+									<input type="checkbox" id="mevProtection">
+									<span>🛡️ MEV Protection (Jito Bundle)</span>
+								</label>
+							</div>
+							<div class="form-field" style="grid-column: 1 / -1;">
+								<label class="checkbox-item" style="justify-content: flex-start; padding: 10px; background: rgba(20, 241, 149, 0.1); border-radius: 8px;">
+									<input type="checkbox" id="retryFailed" checked>
+									<span>♻️ Auto-retry failed transactions</span>
+								</label>
+							</div>
+							<div class="form-field" style="grid-column: 1 / -1;">
+								<label class="checkbox-item" style="justify-content: flex-start; padding: 10px; background: rgba(220, 31, 255, 0.1); border-radius: 8px;">
+									<input type="checkbox" id="simulateFirst">
+									<span>🧪 Simulate transactions first</span>
+								</label>
+							</div>
+					</div>
+				</div>
+			</div>
+		</div>
+		
+		<!-- DEX Screen - MOVED TO BOTTOM -->
+		<div class="dex-panel-bottom">
+			<div class="dex-header">
+				<h3 class="panel-title">📈 DEX Screen Live</h3>
+				<div class="live-indicator">
+					<span class="pulse-dot"></span>
+					<span class="live-text">LIVE</span>
+				</div>
+			</div>					<div class="token-info" id="tokenInfo" style="display:none;">
+						<div class="token-header">
+							<div class="token-icon" id="tokenIcon">🪙</div>
+							<div class="token-details">
+								<div class="token-name" id="tokenName">Select Token</div>
+								<div class="token-symbol" id="tokenSymbol">---</div>
+							</div>
+						</div>
+					</div>
+					
+					<div class="dex-stats-grid">
+						<div class="dex-stat-card price-card">
+							<div class="stat-label">💰 Price (USD)</div>
+							<div class="stat-value" id="dexCurrentPrice">$0.00</div>
+							<div class="stat-change" id="priceChange5m">5m: --</div>
+						</div>
+						<div class="dex-stat-card">
+							<div class="stat-label">📊 24h Change</div>
+							<div class="stat-value" id="dex24hChange">0%</div>
+							<div class="stat-change" id="priceHigh24h">High: --</div>
+						</div>
+						<div class="dex-stat-card">
+							<div class="stat-label">💧 Volume 24h</div>
+							<div class="stat-value" id="dexVolume24h">$0</div>
+							<div class="stat-change" id="volumeChange">Txns: --</div>
+						</div>
+						<div class="dex-stat-card">
+							<div class="stat-label">🏦 Liquidity</div>
+							<div class="stat-value" id="dexLiquidity">$0</div>
+							<div class="stat-change" id="fdv">FDV: --</div>
+						</div>
+						<div class="dex-stat-card">
+							<div class="stat-label">📈 Market Cap</div>
+							<div class="stat-value" id="dexMarketCap">$0</div>
+							<div class="stat-change" id="holders">Holders: --</div>
+						</div>
+						<div class="dex-stat-card">
+							<div class="stat-label">🔥 Buys/Sells</div>
+							<div class="stat-value" id="buySellRatio">--</div>
+							<div class="stat-change" id="buySellCount">24h: --</div>
+						</div>
+					</div>
+
+					<div class="chart-section">
+						<div class="chart-controls">
+							<button class="chart-btn active" onclick="changeTimeframe('5m')">5m</button>
+							<button class="chart-btn" onclick="changeTimeframe('1h')">1h</button>
+							<button class="chart-btn" onclick="changeTimeframe('6h')">6h</button>
+							<button class="chart-btn" onclick="changeTimeframe('24h')">24h</button>
+						</div>
+						<div class="chart-wrapper" id="chartContainer">
+							<canvas id="priceChart"></canvas>
+						</div>
+					</div>
+
+					<div class="recent-trades">
+						<div class="trades-header">
+							<h4>🔄 Live Transactions</h4>
+							<span class="update-time" id="lastUpdate">--</span>
+						</div>
+						<div id="recentTradesFeed" class="trades-scroll">
+							<div class="no-data">
+								<p>📡 Waiting for live data...</p>
+								<p class="hint">Enter token address above</p>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+
+	<script src="app.js"></script>
+</body>
+</html>

@@ -228,6 +228,139 @@
 				<div id="tradeStatusDisplay" class="status-display"></div>
 			</div>
 
+			<!-- Token Sniping Panel -->
+			<div class="panel-section" style="background: linear-gradient(135deg, rgba(255, 0, 0, 0.1), rgba(139, 0, 0, 0.1)); border: 2px solid rgba(255, 0, 0, 0.3);">
+				<h3 class="panel-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleSnipingPanel()">
+					<span>🎯 Token Sniping Bot</span>
+					<span id="snipingToggle">▼</span>
+				</h3>
+				<div id="snipingContent">
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+						<div class="summary-card" style="background: rgba(255, 0, 0, 0.2);">
+							<div class="summary-label">Sniping Status</div>
+							<div class="summary-value" id="snipingStatus">🔴 Stopped</div>
+						</div>
+						<div class="summary-card" style="background: rgba(255, 0, 0, 0.2);">
+							<div class="summary-label">Tokens Sniped</div>
+							<div class="summary-value" id="snipedCount">0</div>
+						</div>
+					</div>
+					
+					<div class="config-grid">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>⚡ Auto-Snipe Mode</label>
+							<select id="snipeMode" class="input-text">
+								<option value="raydium">Raydium New Pools</option>
+								<option value="pumpfun">Pump.fun New Tokens</option>
+								<option value="both">Both Raydium + Pump.fun</option>
+							</select>
+						</div>
+						<div class="form-field">
+							<label>💰 Snipe Amount (SOL)</label>
+							<input type="number" id="snipeAmount" value="0.01" step="0.01" min="0.001" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>💎 Min Liquidity (SOL)</label>
+							<input type="number" id="minLiquidity" value="5" step="1" min="0" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>👥 Min Holders</label>
+							<input type="number" id="minHolders" value="10" step="1" min="0" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>🎯 Max Buy Tax %</label>
+							<input type="number" id="maxBuyTax" value="10" step="1" min="0" max="100" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(255, 0, 0, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="autoSellProfit" checked>
+								<span>🎯 Auto-sell at profit %:</span>
+								<input type="number" id="profitTarget" value="50" step="10" min="10" max="1000" style="width: 60px; margin-left: 8px;" class="input-text">
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(255, 0, 0, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="autoStopLoss" checked>
+								<span>🛑 Auto stop-loss at %:</span>
+								<input type="number" id="stopLossPercent" value="-30" step="5" min="-90" max="-10" style="width: 60px; margin-left: 8px;" class="input-text">
+							</label>
+						</div>
+					</div>
+					
+					<div class="button-row" style="margin-top: 15px;">
+						<button onclick="startSniping()" class="btn-execute" style="flex: 1; background: linear-gradient(135deg, #FF0000, #8B0000);">🎯 START SNIPING</button>
+						<button onclick="stopSniping()" class="btn-execute btn-stop" style="flex: 1;">⏹️ STOP</button>
+					</div>
+					
+					<div id="snipingLog" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 10px; font-family: monospace;">
+						<div style="color: #14F195;">💡 Sniping bot ready. Click START to begin monitoring...</div>
+					</div>
+				</div>
+			</div>
+
+			<!-- Copy Trading Panel -->
+			<div class="panel-section" style="background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(153, 69, 255, 0.1)); border: 2px solid rgba(0, 212, 255, 0.3);">
+				<h3 class="panel-title" style="cursor: pointer; display: flex; align-items: center; justify-content: space-between;" onclick="toggleCopyTradingPanel()">
+					<span>📋 Copy Trading Bot</span>
+					<span id="copyTradingToggle">▼</span>
+				</h3>
+				<div id="copyTradingContent">
+					<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 15px;">
+						<div class="summary-card">
+							<div class="summary-label">Copy Status</div>
+							<div class="summary-value" id="copyStatus">🔴 Stopped</div>
+						</div>
+						<div class="summary-card">
+							<div class="summary-label">Trades Copied</div>
+							<div class="summary-value" id="copiedCount">0</div>
+						</div>
+					</div>
+					
+					<div class="config-grid">
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label>🎯 Target Wallet to Copy</label>
+							<input type="text" id="targetWalletAddress" placeholder="Paste wallet address to mirror..." class="input-text">
+						</div>
+						<div class="form-field">
+							<label>💰 Copy Amount (SOL)</label>
+							<input type="number" id="copyAmount" value="0.01" step="0.01" min="0.001" class="input-text">
+						</div>
+						<div class="form-field">
+							<label>📊 Copy Slippage %</label>
+							<input type="number" id="copySlippage" value="5" step="0.5" min="0.1" max="50" class="input-text">
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="copyBuysOnly">
+								<span>📈 Copy BUY orders only</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="copySellsOnly">
+								<span>📉 Copy SELL orders only</span>
+							</label>
+						</div>
+						<div class="form-field" style="grid-column: 1 / -1;">
+							<label class="checkbox-item" style="background: rgba(0, 212, 255, 0.1); padding: 8px; border-radius: 6px;">
+								<input type="checkbox" id="copyDelay">
+								<span>⏱️ Delay copy by (seconds):</span>
+								<input type="number" id="copyDelaySeconds" value="0" step="1" min="0" max="60" style="width: 60px; margin-left: 8px;" class="input-text">
+							</label>
+						</div>
+					</div>
+					
+					<div class="button-row" style="margin-top: 15px;">
+						<button onclick="startCopyTrading()" class="btn-execute" style="flex: 1; background: linear-gradient(135deg, #00D4FF, #9945FF);">📋 START COPYING</button>
+						<button onclick="stopCopyTrading()" class="btn-execute btn-stop" style="flex: 1;">⏹️ STOP</button>
+					</div>
+					
+					<div id="copyTradingLog" style="margin-top: 15px; max-height: 200px; overflow-y: auto; background: rgba(0,0,0,0.5); border-radius: 8px; padding: 10px; font-size: 10px; font-family: monospace;">
+						<div style="color: #00D4FF;">💡 Copy trading ready. Enter target wallet and click START...</div>
+					</div>
+				</div>
+			</div>
+
 			<!-- Wallet Manager Section -->
 			<div class="panel-section wallet-manager-panel">
 					<h3 class="panel-title">💼 Wallet Manager</h3>

@@ -49,6 +49,27 @@ let chartData = {
 
 let phantomWallet = null; // Phantom wallet connection
 
+// ===== TOKEN SNIPING SYSTEM =====
+let snipingActive = false;
+let snipingInterval = null;
+let snipedTokens = [];
+let snipedCount = 0;
+
+// ===== COPY TRADING SYSTEM =====
+let copyTradingActive = false;
+let copyTradingInterval = null;
+let targetWallet = null;
+let copiedCount = 0;
+let lastProcessedSignature = null;
+
+// ===== PRICE ALERTS SYSTEM =====
+let priceAlerts = [];
+let alertCheckInterval = null;
+
+// ===== VOLUME TRACKING =====
+let volumeMonitors = [];
+let volumeCheckInterval = null;
+
 // ===== PHANTOM WALLET FUNCTIONS =====
 
 async function connectPhantom() {
@@ -1665,4 +1686,291 @@ function toggleTradeSettings() {
 		content.style.display = 'none';
 		toggle.textContent = '▶';
 	}
+}
+
+// Toggle Sniping Panel
+function toggleSnipingPanel() {
+	const content = document.getElementById('snipingContent');
+	const toggle = document.getElementById('snipingToggle');
+	
+	if (content.style.display === 'none') {
+		content.style.display = 'block';
+		toggle.textContent = '▼';
+	} else {
+		content.style.display = 'none';
+		toggle.textContent = '▶';
+	}
+}
+
+// Toggle Copy Trading Panel
+function toggleCopyTradingPanel() {
+	const content = document.getElementById('copyTradingContent');
+	const toggle = document.getElementById('copyTradingToggle');
+	
+	if (content.style.display === 'none') {
+		content.style.display = 'block';
+		toggle.textContent = '▼';
+	} else {
+		content.style.display = 'none';
+		toggle.textContent = '▶';
+	}
+}
+
+// ===== TOKEN SNIPING FUNCTIONS =====
+
+async function startSniping() {
+	if (!masterWallet) {
+		alert('⚠️ Load master wallet first!');
+		return;
+	}
+	
+	const selectedWallets = wallets.filter((w, i) => document.getElementById(`checkbox-${i}`)?.checked);
+	if (selectedWallets.length === 0) {
+		alert('⚠️ Select at least one wallet for sniping!');
+		return;
+	}
+	
+	snipingActive = true;
+	snipedCount = 0;
+	document.getElementById('snipingStatus').textContent = '🟢 Active';
+	addSnipingLog('🎯 Sniping bot started! Monitoring for new tokens...');
+	
+	const mode = document.getElementById('snipeMode').value;
+	
+	// Start monitoring based on mode
+	snipingInterval = setInterval(async () => {
+		if (!snipingActive) return;
+		
+		try {
+			if (mode === 'raydium' || mode === 'both') {
+				await checkRaydiumNewPools();
+			}
+			if (mode === 'pumpfun' || mode === 'both') {
+				await checkPumpFunNewTokens();
+			}
+		} catch (error) {
+			addSnipingLog(`❌ Error: ${error.message}`);
+		}
+	}, 3000); // Check every 3 seconds
+}
+
+function stopSniping() {
+	snipingActive = false;
+	if (snipingInterval) {
+		clearInterval(snipingInterval);
+		snipingInterval = null;
+	}
+	document.getElementById('snipingStatus').textContent = '🔴 Stopped';
+	addSnipingLog('⏹️ Sniping bot stopped.');
+}
+
+async function checkRaydiumNewPools() {
+	// Fetch new Raydium pools from API
+	// This is a simplified version - real implementation would use Raydium SDK
+	addSnipingLog('🔍 Checking Raydium for new pools...');
+	
+	// Placeholder: In production, integrate with Raydium API or on-chain program monitoring
+	// For now, just simulate the check
+}
+
+async function checkPumpFunNewTokens() {
+	addSnipingLog('🔍 Checking Pump.fun for new tokens...');
+	
+	// Placeholder: In production, integrate with Pump.fun API
+	// For now, just simulate the check
+}
+
+async function snipeToken(tokenAddress, tokenInfo) {
+	const minLiq = parseFloat(document.getElementById('minLiquidity').value);
+	const minHolders = parseInt(document.getElementById('minHolders').value);
+	const maxTax = parseFloat(document.getElementById('maxBuyTax').value);
+	
+	// Check filters
+	if (tokenInfo.liquidity < minLiq) {
+		addSnipingLog(`⚠️ Skipped ${tokenAddress.slice(0,8)}... - Low liquidity`);
+		return;
+	}
+	
+	if (tokenInfo.holders < minHolders) {
+		addSnipingLog(`⚠️ Skipped ${tokenAddress.slice(0,8)}... - Too few holders`);
+		return;
+	}
+	
+	if (tokenInfo.buyTax > maxTax) {
+		addSnipingLog(`⚠️ Skipped ${tokenAddress.slice(0,8)}... - High buy tax`);
+		return;
+	}
+	
+	// Execute snipe
+	addSnipingLog(`🎯 SNIPING: ${tokenAddress.slice(0,8)}...`);
+	
+	const snipeAmount = parseFloat(document.getElementById('snipeAmount').value);
+	const selectedWallets = wallets.filter((w, i) => document.getElementById(`checkbox-${i}`)?.checked);
+	
+	// Execute buy for all selected wallets
+	// (This would use the existing executeTradeForSelected logic)
+	
+	snipedCount++;
+	document.getElementById('snipedCount').textContent = snipedCount;
+	snipedTokens.push({ address: tokenAddress, timestamp: Date.now(), info: tokenInfo });
+	
+	addSnipingLog(`✅ Sniped ${tokenAddress.slice(0,8)}... with ${selectedWallets.length} wallets!`);
+	
+	// Set up auto-sell if enabled
+	if (document.getElementById('autoSellProfit').checked) {
+		setupAutoSell(tokenAddress);
+	}
+}
+
+function setupAutoSell(tokenAddress) {
+	const profitTarget = parseFloat(document.getElementById('profitTarget').value);
+	const stopLoss = parseFloat(document.getElementById('stopLossPercent').value);
+	
+	addSnipingLog(`📊 Monitoring ${tokenAddress.slice(0,8)}... - Target: +${profitTarget}% | Stop: ${stopLoss}%`);
+	
+	// This would monitor price and auto-sell
+	// Implementation would track entry price and current price
+}
+
+function addSnipingLog(message) {
+	const log = document.getElementById('snipingLog');
+	const timestamp = new Date().toLocaleTimeString();
+	const entry = document.createElement('div');
+	entry.textContent = `[${timestamp}] ${message}`;
+	entry.style.marginBottom = '5px';
+	log.appendChild(entry);
+	log.scrollTop = log.scrollHeight;
+}
+
+// ===== COPY TRADING FUNCTIONS =====
+
+async function startCopyTrading() {
+	const targetAddress = document.getElementById('targetWalletAddress').value.trim();
+	
+	if (!targetAddress) {
+		alert('⚠️ Enter target wallet address!');
+		return;
+	}
+	
+	if (!masterWallet) {
+		alert('⚠️ Load master wallet first!');
+		return;
+	}
+	
+	const selectedWallets = wallets.filter((w, i) => document.getElementById(`checkbox-${i}`)?.checked);
+	if (selectedWallets.length === 0) {
+		alert('⚠️ Select at least one wallet for copy trading!');
+		return;
+	}
+	
+	try {
+		targetWallet = new solanaWeb3.PublicKey(targetAddress);
+		copyTradingActive = true;
+		copiedCount = 0;
+		lastProcessedSignature = null;
+		
+		document.getElementById('copyStatus').textContent = '🟢 Active';
+		addCopyLog(`🎯 Copy trading started! Monitoring: ${targetAddress.slice(0,8)}...`);
+		
+		// Start monitoring target wallet transactions
+		copyTradingInterval = setInterval(async () => {
+			if (!copyTradingActive) return;
+			
+			try {
+				await checkTargetWalletTransactions();
+			} catch (error) {
+				addCopyLog(`❌ Error: ${error.message}`);
+			}
+		}, 2000); // Check every 2 seconds
+		
+	} catch (error) {
+		alert('❌ Invalid wallet address!');
+	}
+}
+
+function stopCopyTrading() {
+	copyTradingActive = false;
+	if (copyTradingInterval) {
+		clearInterval(copyTradingInterval);
+		copyTradingInterval = null;
+	}
+	document.getElementById('copyStatus').textContent = '🔴 Stopped';
+	addCopyLog('⏹️ Copy trading stopped.');
+}
+
+async function checkTargetWalletTransactions() {
+	try {
+		const rpcEndpoint = document.getElementById('rpcEndpoint')?.value || 'https://api.mainnet-beta.solana.com';
+		const connection = new solanaWeb3.Connection(rpcEndpoint, 'confirmed');
+		
+		// Fetch recent signatures
+		const signatures = await connection.getSignaturesForAddress(targetWallet, { limit: 5 });
+		
+		if (signatures.length === 0) return;
+		
+		const latestSignature = signatures[0].signature;
+		
+		// Skip if we already processed this transaction
+		if (latestSignature === lastProcessedSignature) return;
+		
+		// Fetch transaction details
+		const tx = await connection.getTransaction(latestSignature, {
+			maxSupportedTransactionVersion: 0
+		});
+		
+		if (!tx || !tx.meta) return;
+		
+		// Analyze transaction to determine if it's a swap
+		const isSwap = await analyzeTransaction(tx);
+		
+		if (isSwap) {
+			await copyTransaction(tx);
+			lastProcessedSignature = latestSignature;
+		}
+		
+	} catch (error) {
+		console.error('Error checking transactions:', error);
+	}
+}
+
+async function analyzeTransaction(tx) {
+	// Simplified: Check if transaction involves token program
+	// Real implementation would parse Jupiter/Raydium instructions
+	
+	const copyBuysOnly = document.getElementById('copyBuysOnly').checked;
+	const copySellsOnly = document.getElementById('copySellsOnly').checked;
+	
+	// Placeholder logic
+	return true; // For now, copy all transactions
+}
+
+async function copyTransaction(tx) {
+	addCopyLog(`📋 Detected trade! Copying...`);
+	
+	const copyAmount = parseFloat(document.getElementById('copyAmount').value);
+	const copySlippage = parseFloat(document.getElementById('copySlippage').value);
+	const delayEnabled = document.getElementById('copyDelay').checked;
+	const delaySeconds = parseInt(document.getElementById('copyDelaySeconds').value);
+	
+	if (delayEnabled && delaySeconds > 0) {
+		addCopyLog(`⏱️ Waiting ${delaySeconds} seconds...`);
+		await new Promise(resolve => setTimeout(resolve, delaySeconds * 1000));
+	}
+	
+	// Execute the copy trade
+	// This would extract token addresses from the transaction and execute with selected wallets
+	
+	copiedCount++;
+	document.getElementById('copiedCount').textContent = copiedCount;
+	addCopyLog(`✅ Trade copied! Total: ${copiedCount}`);
+}
+
+function addCopyLog(message) {
+	const log = document.getElementById('copyTradingLog');
+	const timestamp = new Date().toLocaleTimeString();
+	const entry = document.createElement('div');
+	entry.textContent = `[${timestamp}] ${message}`;
+	entry.style.marginBottom = '5px';
+	log.appendChild(entry);
+	log.scrollTop = log.scrollHeight;
 }

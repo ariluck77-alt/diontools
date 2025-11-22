@@ -3,7 +3,7 @@
 <head>
 	<meta charset="UTF-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1.0">
-	<title>RUGTOOL - Solana Trading Platform</title>
+	<title>DionTools - Solana Trading Platform</title>
 	<link rel="stylesheet" href="rugtool-style.css">
 	<script src="https://unpkg.com/@solana/web3.js@1.95.2/lib/index.iife.min.js"></script>
 </head>
@@ -12,7 +12,7 @@
 		<!-- Sidebar -->
 		<div class="sidebar">
 			<div class="logo">
-				<span class="logo-rug">RUG</span><span class="logo-tool">TOOL</span>
+				<span class="logo-rug">Dion</span><span class="logo-tool">Tools</span>
 			</div>
 			
 			<nav class="nav-menu">
@@ -294,34 +294,366 @@
 
 			<!-- Sniper Bot Page -->
 			<div id="sniper-page" class="page">
-				<h2>Sniper Bot</h2>
-				<p>Coming soon...</p>
+				<div class="page-header">
+					<h2>Sniper Bot</h2>
+					<button class="btn-connect" id="sniperToggle" onclick="toggleSniper()">START SNIPER</button>
+				</div>
+
+				<div class="sniper-grid">
+					<div class="sniper-panel">
+						<h3>Sniper Configuration</h3>
+						
+						<div class="form-group">
+							<label>Token Source</label>
+							<select class="input-field" id="sniperSource">
+								<option value="raydium">Raydium New Pools</option>
+								<option value="pumpfun">Pump.fun Launch</option>
+								<option value="both">Both Sources</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label>Buy Amount (SOL)</label>
+							<input type="number" class="input-field" id="sniperAmount" value="0.01" step="0.01">
+						</div>
+
+						<div class="form-group">
+							<label>Min Liquidity ($)</label>
+							<input type="number" class="input-field" id="sniperMinLiq" value="5000" step="1000">
+						</div>
+
+						<div class="form-group">
+							<label>Max Buy Tax (%)</label>
+							<input type="number" class="input-field" id="sniperMaxTax" value="10" step="1">
+						</div>
+
+						<div class="form-group">
+							<label class="checkbox-label">
+								<input type="checkbox" id="sniperAutoSell" checked>
+								<span>Auto-sell at 2x profit</span>
+							</label>
+						</div>
+
+						<div class="form-group">
+							<label class="checkbox-label">
+								<input type="checkbox" id="sniperStopLoss">
+								<span>Stop-loss at -50%</span>
+							</label>
+						</div>
+					</div>
+
+					<div class="sniper-panel">
+						<h3>Sniper Activity</h3>
+						<div class="stats-grid">
+							<div class="stat-card">
+								<div class="stat-label">STATUS</div>
+								<div class="stat-value" id="sniperStatus">🔴 Stopped</div>
+							</div>
+							<div class="stat-card">
+								<div class="stat-label">TOKENS SNIPED</div>
+								<div class="stat-value" id="tokensSniped">0</div>
+							</div>
+							<div class="stat-card">
+								<div class="stat-label">SUCCESS RATE</div>
+								<div class="stat-value green" id="successRate">0%</div>
+							</div>
+						</div>
+
+						<div class="activity-log" id="sniperLog">
+							<div style="color: #888; text-align: center; padding: 20px;">
+								Waiting to start sniper bot...
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 
-			<!-- Other Pages -->
+			<!-- Pump Swap Page -->
 			<div id="swap-page" class="page">
-				<h2>Pump Swap</h2>
-				<p>Coming soon...</p>
+				<div class="page-header">
+					<h2>Pump Swap</h2>
+				</div>
+
+				<div class="swap-container">
+					<div class="swap-panel">
+						<h3>Swap Tokens</h3>
+						
+						<div class="swap-card">
+							<div class="swap-label">You Pay</div>
+							<div class="swap-input-group">
+								<input type="number" class="swap-input" id="swapFrom" value="1.0" step="0.1">
+								<select class="token-select">
+									<option value="SOL">SOL</option>
+									<option value="USDC">USDC</option>
+								</select>
+							</div>
+							<div class="balance">Balance: 0.00 SOL</div>
+						</div>
+
+						<div class="swap-arrow">⬇️</div>
+
+						<div class="swap-card">
+							<div class="swap-label">You Receive</div>
+							<div class="swap-input-group">
+								<input type="number" class="swap-input" id="swapTo" value="0.0" readonly>
+								<input type="text" class="token-input" placeholder="Token address...">
+							</div>
+							<div class="balance">Balance: 0.00</div>
+						</div>
+
+						<div class="form-group">
+							<label>Slippage (%)</label>
+							<div class="slippage-buttons">
+								<button class="btn-slippage" onclick="setSlippage(0.5)">0.5%</button>
+								<button class="btn-slippage" onclick="setSlippage(1)">1%</button>
+								<button class="btn-slippage active" onclick="setSlippage(2)">2%</button>
+								<button class="btn-slippage" onclick="setSlippage(5)">5%</button>
+								<input type="number" class="input-field" id="customSlippage" placeholder="Custom" step="0.1" style="width: 80px;">
+							</div>
+						</div>
+
+						<button class="btn-launch" onclick="executeSwap()">
+							<span>🔄</span> SWAP NOW
+						</button>
+					</div>
+				</div>
 			</div>
 
+			<!-- Leaderboard Page -->
 			<div id="leaderboard-page" class="page">
-				<h2>Leaderboard</h2>
-				<p>Coming soon...</p>
+				<div class="page-header">
+					<h2>Leaderboard</h2>
+					<div class="filter-tabs">
+						<button class="tab-btn active">Top Traders</button>
+						<button class="tab-btn">Top Tokens</button>
+						<button class="tab-btn">Recent Wins</button>
+					</div>
+				</div>
+
+				<div class="leaderboard-container">
+					<table class="holders-table">
+						<thead>
+							<tr>
+								<th>Rank</th>
+								<th>Address</th>
+								<th>Total P&L</th>
+								<th>Trades</th>
+								<th>Win Rate</th>
+								<th>Action</th>
+							</tr>
+						</thead>
+						<tbody id="leaderboardBody">
+							<tr>
+								<td>🥇 1</td>
+								<td><span class="address">5pmQzgn...3m1Jjvfm</span></td>
+								<td class="green">+142.5 SOL</td>
+								<td>89</td>
+								<td>78%</td>
+								<td><button class="btn-amount" onclick="copyTrade('5pmQzgn')">Copy</button></td>
+							</tr>
+							<tr>
+								<td>🥈 2</td>
+								<td><span class="address">8tzwpnr...TjexH1xx</span></td>
+								<td class="green">+98.3 SOL</td>
+								<td>67</td>
+								<td>72%</td>
+								<td><button class="btn-amount" onclick="copyTrade('8tzwpnr')">Copy</button></td>
+							</tr>
+							<tr>
+								<td>🥉 3</td>
+								<td><span class="address">Wetypo4...zrheuk53</span></td>
+								<td class="green">+76.8 SOL</td>
+								<td>54</td>
+								<td>69%</td>
+								<td><button class="btn-amount" onclick="copyTrade('Wetypo4')">Copy</button></td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</div>
 
+			<!-- P&L Tracker Page -->
 			<div id="pnl-page" class="page">
-				<h2>P&L Tracker</h2>
-				<p>Coming soon...</p>
+				<div class="page-header">
+					<h2>P&L Tracker</h2>
+					<button class="btn-connect" onclick="refreshPnL()">🔄 Refresh</button>
+				</div>
+
+				<div class="pnl-summary">
+					<div class="pnl-card">
+						<div class="pnl-label">Total P&L</div>
+						<div class="pnl-value green">+12.45 SOL</div>
+						<div class="pnl-usd">≈ $2,450.00</div>
+					</div>
+					<div class="pnl-card">
+						<div class="pnl-label">Total Trades</div>
+						<div class="pnl-value">47</div>
+						<div class="pnl-sub">32 wins / 15 losses</div>
+					</div>
+					<div class="pnl-card">
+						<div class="pnl-label">Win Rate</div>
+						<div class="pnl-value">68.1%</div>
+						<div class="pnl-sub">Last 7 days</div>
+					</div>
+					<div class="pnl-card">
+						<div class="pnl-label">Avg Profit</div>
+						<div class="pnl-value green">+0.39 SOL</div>
+						<div class="pnl-sub">Per winning trade</div>
+					</div>
+				</div>
+
+				<div class="pnl-table-container">
+					<h3>Recent Trades</h3>
+					<table class="holders-table">
+						<thead>
+							<tr>
+								<th>Time</th>
+								<th>Token</th>
+								<th>Type</th>
+								<th>Amount</th>
+								<th>Price</th>
+								<th>P&L</th>
+							</tr>
+						</thead>
+						<tbody id="pnlTableBody">
+							<tr>
+								<td>10:23 AM</td>
+								<td><span class="address">BONK...xyz</span></td>
+								<td><span class="badge" style="background: #00ff88; color: #000;">BUY</span></td>
+								<td>0.5 SOL</td>
+								<td>$0.00123</td>
+								<td class="green">+0.23 SOL</td>
+							</tr>
+						</tbody>
+					</table>
+				</div>
 			</div>
 
+			<!-- Wallets Manager Page -->
 			<div id="wallets-page" class="page">
-				<h2>Wallets Manager</h2>
-				<p>Coming soon...</p>
+				<div class="page-header">
+					<h2>Wallets Manager</h2>
+					<button class="btn-connect" onclick="generateWallets()">+ Generate Wallets</button>
+				</div>
+
+				<div class="wallets-grid">
+					<div class="wallets-panel">
+						<h3>Wallet Settings</h3>
+						
+						<div class="form-group">
+							<label>Number of Wallets</label>
+							<input type="number" class="input-field" id="numWallets" value="10" min="1" max="50">
+						</div>
+
+						<div class="form-group">
+							<label>Distribution Amount (SOL)</label>
+							<input type="number" class="input-field" id="distAmount" value="0.1" step="0.01">
+						</div>
+
+						<button class="btn-launch" onclick="distributeSOL()">
+							<span>💸</span> DISTRIBUTE SOL
+						</button>
+
+						<button class="btn-launch" onclick="collectSOL()" style="margin-top: 10px; background: linear-gradient(135deg, #ff4444, #cc0000);">
+							<span>🔙</span> COLLECT ALL
+						</button>
+					</div>
+
+					<div class="wallets-panel">
+						<h3>Active Wallets</h3>
+						<div class="stats-grid">
+							<div class="stat-card">
+								<div class="stat-label">TOTAL WALLETS</div>
+								<div class="stat-value" id="totalWallets">0</div>
+							</div>
+							<div class="stat-card">
+								<div class="stat-label">TOTAL BALANCE</div>
+								<div class="stat-value" id="totalBalance">0.00 SOL</div>
+							</div>
+						</div>
+
+						<div class="wallet-list" id="walletList">
+							<div style="color: #888; text-align: center; padding: 20px;">
+								No wallets generated yet
+							</div>
+						</div>
+					</div>
+				</div>
 			</div>
 
+			<!-- Settings Page -->
 			<div id="settings-page" class="page">
-				<h2>Settings</h2>
-				<p>Coming soon...</p>
+				<div class="page-header">
+					<h2>Settings</h2>
+				</div>
+
+				<div class="settings-container">
+					<div class="settings-panel">
+						<h3>Trading Settings</h3>
+						
+						<div class="form-group">
+							<label>Default Slippage (%)</label>
+							<input type="number" class="input-field" id="defaultSlippage" value="2" step="0.1">
+						</div>
+
+						<div class="form-group">
+							<label>Priority Fee (Micro Lamports)</label>
+							<input type="number" class="input-field" id="priorityFee" value="50000" step="10000">
+						</div>
+
+						<div class="form-group">
+							<label>RPC Endpoint</label>
+							<select class="input-field" id="rpcEndpoint">
+								<option value="mainnet">Mainnet Beta</option>
+								<option value="custom">Custom RPC</option>
+							</select>
+						</div>
+
+						<div class="form-group">
+							<label class="checkbox-label">
+								<input type="checkbox" id="enableMEV" checked>
+								<span>Enable MEV Protection (Jito)</span>
+							</label>
+						</div>
+
+						<div class="form-group">
+							<label class="checkbox-label">
+								<input type="checkbox" id="enableNotifications" checked>
+								<span>Browser Notifications</span>
+							</label>
+						</div>
+
+						<div class="form-group">
+							<label class="checkbox-label">
+								<input type="checkbox" id="autoApprove">
+								<span>Auto-approve transactions</span>
+							</label>
+						</div>
+
+						<button class="btn-launch" onclick="saveSettings()">
+							<span>💾</span> SAVE SETTINGS
+						</button>
+					</div>
+
+					<div class="settings-panel">
+						<h3>About DionTools</h3>
+						<div class="about-info">
+							<p><strong>Version:</strong> 1.0.0</p>
+							<p><strong>Build:</strong> 2025.11.22</p>
+							<p><strong>Network:</strong> Solana Mainnet</p>
+							<p style="margin-top: 20px; color: #888;">
+								DionTools is a professional Solana trading platform with automated bots, 
+								multi-wallet management, and advanced trading features.
+							</p>
+						</div>
+
+						<div class="social-links">
+							<button class="btn-social">🐦 Twitter</button>
+							<button class="btn-social">💬 Telegram</button>
+							<button class="btn-social">🌐 Website</button>
+						</div>
+					</div>
+				</div>
 			</div>
 		</div>
 	</div>

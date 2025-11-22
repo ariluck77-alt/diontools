@@ -217,7 +217,7 @@ document.head.appendChild(style);
 
 // Initialize on load
 window.addEventListener('load', () => {
-	console.log('🚀 RUGTOOL initialized');
+	console.log('🚀 DionTools initialized');
 	
 	// Auto-detect Phantom wallet
 	if (window.solana && window.solana.isPhantom) {
@@ -246,4 +246,205 @@ setInterval(() => {
 	}
 }, 5000);
 
-console.log('💚 RUGTOOL App loaded successfully!');
+// ==================== SNIPER BOT FUNCTIONS ====================
+let sniperActive = false;
+let sniperInterval = null;
+let tokensSniped = 0;
+let successfulSnipes = 0;
+
+function toggleSniper() {
+	const btn = document.getElementById('sniperToggle');
+	const status = document.getElementById('sniperStatus');
+	
+	if (!sniperActive) {
+		// Start sniper
+		sniperActive = true;
+		btn.textContent = 'STOP SNIPER';
+		btn.style.background = 'linear-gradient(135deg, #ff4444, #cc0000)';
+		status.textContent = '🟢 Active';
+		status.classList.add('green');
+		
+		addSniperLog('🚀 Sniper bot started');
+		addSniperLog('👀 Monitoring for new tokens...');
+		
+		// Simulate sniping
+		sniperInterval = setInterval(() => {
+			if (Math.random() > 0.7) {
+				const tokenName = 'TOKEN' + Math.floor(Math.random() * 9999);
+				tokensSniped++;
+				if (Math.random() > 0.3) successfulSnipes++;
+				
+				document.getElementById('tokensSniped').textContent = tokensSniped;
+				document.getElementById('successRate').textContent = 
+					((successfulSnipes / tokensSniped) * 100).toFixed(1) + '%';
+				
+				addSniperLog(`🎯 Found new token: ${tokenName}`);
+				addSniperLog(`💰 Buying 0.01 SOL...`);
+				
+				if (Math.random() > 0.3) {
+					addSniperLog(`✅ Successfully sniped ${tokenName}!`);
+				} else {
+					addSniperLog(`❌ Snipe failed - too slow`);
+				}
+			}
+		}, 5000);
+	} else {
+		// Stop sniper
+		sniperActive = false;
+		btn.textContent = 'START SNIPER';
+		btn.style.background = 'linear-gradient(135deg, #00ff88, #00cc70)';
+		status.textContent = '🔴 Stopped';
+		status.classList.remove('green');
+		
+		clearInterval(sniperInterval);
+		addSniperLog('⏹️ Sniper bot stopped');
+	}
+}
+
+function addSniperLog(message) {
+	const log = document.getElementById('sniperLog');
+	const timestamp = new Date().toLocaleTimeString();
+	const entry = document.createElement('div');
+	entry.textContent = `[${timestamp}] ${message}`;
+	entry.style.marginBottom = '5px';
+	entry.style.color = message.includes('✅') ? '#00ff88' : 
+	                    message.includes('❌') ? '#ff4444' : '#ccc';
+	log.appendChild(entry);
+	log.scrollTop = log.scrollHeight;
+}
+
+// ==================== SWAP FUNCTIONS ====================
+function setSlippage(value) {
+	document.querySelectorAll('.btn-slippage').forEach(btn => btn.classList.remove('active'));
+	event.target.classList.add('active');
+	document.getElementById('customSlippage').value = value;
+}
+
+function executeSwap() {
+	const fromAmount = document.getElementById('swapFrom').value;
+	showNotification(`🔄 Executing swap for ${fromAmount} SOL...`, 'info');
+	
+	setTimeout(() => {
+		showNotification('✅ Swap executed successfully!', 'success');
+	}, 2000);
+}
+
+// ==================== LEADERBOARD FUNCTIONS ====================
+function copyTrade(address) {
+	showNotification(`📋 Now copying trades from ${address}...`, 'success');
+}
+
+// ==================== P&L FUNCTIONS ====================
+function refreshPnL() {
+	showNotification('🔄 Refreshing P&L data...', 'info');
+	
+	setTimeout(() => {
+		showNotification('✅ P&L data updated!', 'success');
+	}, 1500);
+}
+
+// ==================== WALLETS FUNCTIONS ====================
+let generatedWallets = [];
+
+function generateWallets() {
+	const numWallets = parseInt(document.getElementById('numWallets').value);
+	generatedWallets = [];
+	
+	for (let i = 0; i < numWallets; i++) {
+		generatedWallets.push({
+			address: generateRandomAddress(),
+			balance: 0
+		});
+	}
+	
+	document.getElementById('totalWallets').textContent = numWallets;
+	updateWalletList();
+	showNotification(`✅ Generated ${numWallets} wallets!`, 'success');
+}
+
+function updateWalletList() {
+	const list = document.getElementById('walletList');
+	
+	if (generatedWallets.length === 0) {
+		list.innerHTML = '<div style="color: #888; text-align: center; padding: 20px;">No wallets generated yet</div>';
+		return;
+	}
+	
+	list.innerHTML = generatedWallets.map((wallet, i) => `
+		<div class="wallet-item">
+			<div>
+				<div style="font-size: 10px; color: #888; margin-bottom: 4px;">Wallet ${i + 1}</div>
+				<div class="wallet-address">${wallet.address}</div>
+			</div>
+			<div class="wallet-balance">${wallet.balance.toFixed(3)} SOL</div>
+		</div>
+	`).join('');
+}
+
+function distributeSOL() {
+	const amount = parseFloat(document.getElementById('distAmount').value);
+	
+	if (generatedWallets.length === 0) {
+		showNotification('⚠️ Generate wallets first!', 'error');
+		return;
+	}
+	
+	generatedWallets.forEach(wallet => {
+		wallet.balance += amount;
+	});
+	
+	const total = generatedWallets.reduce((sum, w) => sum + w.balance, 0);
+	document.getElementById('totalBalance').textContent = total.toFixed(2) + ' SOL';
+	
+	updateWalletList();
+	showNotification(`💸 Distributed ${amount} SOL to ${generatedWallets.length} wallets!`, 'success');
+}
+
+function collectSOL() {
+	if (generatedWallets.length === 0) {
+		showNotification('⚠️ No wallets to collect from!', 'error');
+		return;
+	}
+	
+	const total = generatedWallets.reduce((sum, w) => sum + w.balance, 0);
+	
+	generatedWallets.forEach(wallet => {
+		wallet.balance = 0;
+	});
+	
+	document.getElementById('totalBalance').textContent = '0.00 SOL';
+	updateWalletList();
+	showNotification(`🔙 Collected ${total.toFixed(2)} SOL from all wallets!`, 'success');
+}
+
+// ==================== SETTINGS FUNCTIONS ====================
+function saveSettings() {
+	const slippage = document.getElementById('defaultSlippage').value;
+	const priorityFee = document.getElementById('priorityFee').value;
+	const enableMEV = document.getElementById('enableMEV').checked;
+	const enableNotifications = document.getElementById('enableNotifications').checked;
+	
+	// Save to localStorage
+	localStorage.setItem('settings', JSON.stringify({
+		slippage,
+		priorityFee,
+		enableMEV,
+		enableNotifications
+	}));
+	
+	showNotification('💾 Settings saved successfully!', 'success');
+}
+
+// Load settings on startup
+window.addEventListener('load', () => {
+	const saved = localStorage.getItem('settings');
+	if (saved) {
+		const settings = JSON.parse(saved);
+		document.getElementById('defaultSlippage').value = settings.slippage;
+		document.getElementById('priorityFee').value = settings.priorityFee;
+		document.getElementById('enableMEV').checked = settings.enableMEV;
+		document.getElementById('enableNotifications').checked = settings.enableNotifications;
+	}
+});
+
+console.log('💚 DionTools App loaded successfully!');

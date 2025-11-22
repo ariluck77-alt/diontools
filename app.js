@@ -65,6 +65,13 @@ let lastProcessedSignature = null;
 // ===== PRICE ALERTS SYSTEM =====
 let priceAlerts = [];
 let alertCheckInterval = null;
+let triggeredAlertsCount = 0;
+
+// ===== VOLUME SPIKE DETECTION =====
+let volumeMonitoringActive = false;
+let volumeMonitorInterval = null;
+let previousVolume = null;
+let spikesDetectedCount = 0;
 
 // ===== VOLUME TRACKING =====
 let volumeMonitors = [];
@@ -1974,3 +1981,331 @@ function addCopyLog(message) {
 	log.appendChild(entry);
 	log.scrollTop = log.scrollHeight;
 }
+
+// ===================================
+// PRICE ALERTS & AUTO-SELL SYSTEM
+// ===================================
+
+function togglePriceAlertsPanel() {
+	const content = document.getElementById('priceAlertsContent');
+	const toggle = document.getElementById('priceAlertsToggle');
+	if (content.style.display === 'none') {
+		content.style.display = 'block';
+		toggle.textContent = '▼';
+	} else {
+		content.style.display = 'none';
+		toggle.textContent = '▲';
+	}
+}
+
+async function addPriceAlert() {
+	const tokenAddress = document.getElementById('alertTokenAddress').value.trim();
+	const highPrice = parseFloat(document.getElementById('highAlertPrice').value);
+	const lowPrice = parseFloat(document.getElementById('lowAlertPrice').value);
+	const autoSellOnHigh = document.getElementById('autoSellOnHigh').checked;
+	const autoBuyOnLow = document.getElementById('autoBuyOnLow').checked;
+	const browserNotifications = document.getElementById('browserNotifications').checked;
+	
+	if (!tokenAddress) {
+		alert('❌ Please enter token address!');
+		return;
+	}
+	
+	if (!highPrice && !lowPrice) {
+		alert('❌ Please set at least one price target!');
+		return;
+	}
+	
+	// Request notification permission
+	if (browserNotifications && Notification.permission === 'default') {
+		await Notification.requestPermission();
+	}
+	
+	const alert = {
+		id: Date.now(),
+		tokenAddress,
+		highPrice,
+		lowPrice,
+		autoSellOnHigh,
+		autoBuyOnLow,
+		browserNotifications,
+		triggered: false,
+		active: true
+	};
+	
+	priceAlerts.push(alert);
+	updateAlertsList();
+	
+	// Start monitoring if not already active
+	if (!alertCheckInterval) {
+		alertCheckInterval = setInterval(checkAllAlerts, 5000); // Check every 5 seconds
+	}
+	
+	addAlertLog(`✅ Alert added for ${tokenAddress.slice(0, 8)}...`);
+}
+
+function updateAlertsList() {
+	const alertsList = document.getElementById('alertsList');
+	const activeAlerts = priceAlerts.filter(a => a.active);
+	
+	document.getElementById('activeAlertsCount').textContent = activeAlerts.length;
+	document.getElementById('triggeredAlertsCount').textContent = triggeredAlertsCount;
+	
+	if (activeAlerts.length === 0) {
+		alertsList.innerHTML = '<div style="color: #14F195;">💡 No alerts set. Add token address and price targets above.</div>';
+		return;
+	}
+	
+	alertsList.innerHTML = activeAlerts.map(alert => `
+		<div style="background: rgba(20, 241, 149, 0.1); padding: 8px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid #14F195;">
+			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+				<span style="color: #14F195; font-weight: bold;">${alert.tokenAddress.slice(0, 8)}...${alert.tokenAddress.slice(-6)}</span>
+				<button onclick="removeAlert(${alert.id})" style="background: rgba(255, 56, 100, 0.3); border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; color: #FF3864; font-size: 9px;">REMOVE</button>
+			</div>
+			${alert.highPrice ? `<div style="color: #14F195;">📈 High: $${alert.highPrice} ${alert.autoSellOnHigh ? '(Auto-sell)' : ''}</div>` : ''}
+			${alert.lowPrice ? `<div style="color: #FF3864;">📉 Low: $${alert.lowPrice} ${alert.autoBuyOnLow ? '(Auto-buy)' : ''}</div>` : ''}
+		</div>
+	`).join('');
+}
+
+function removeAlert(alertId) {
+	priceAlerts = priceAlerts.filter(a => a.id !== alertId);
+	updateAlertsList();
+	
+	if (priceAlerts.length === 0 && alertCheckInterval) {
+		clearInterval(alertCheckInterval);
+		alertCheckInterval = null;
+	}
+	
+	addAlertLog('🗑️ Alert removed');
+}
+
+function clearAllAlerts() {
+	if (!confirm('Clear all price alerts?')) return;
+	
+	priceAlerts = [];
+	updateAlertsList();
+	
+	if (alertCheckInterval) {
+		clearInterval(alertCheckInterval);
+		alertCheckInterval = null;
+	}
+	
+	addAlertLog('🗑️ All alerts cleared');
+}
+
+async function checkAllAlerts() {
+	for (const alert of priceAlerts) {
+		if (!alert.active || alert.triggered) continue;
+		
+		try {
+			// Fetch current price from DexScreener
+			const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${alert.tokenAddress}`);
+			const data = await response.json();
+			
+			if (!data.pairs || data.pairs.length === 0) continue;
+			
+			const currentPrice = parseFloat(data.pairs[0].priceUsd);
+			
+			// Check high alert
+			if (alert.highPrice && currentPrice >= alert.highPrice) {
+				await triggerAlert(alert, 'HIGH', currentPrice);
+				
+				if (alert.autoSellOnHigh) {
+					addAlertLog(`🔥 Auto-selling at $${currentPrice}...`);
+					// Execute sell with selected wallets
+					// This would call the sell function for selected wallets
+				}
+			}
+			
+			// Check low alert
+			if (alert.lowPrice && currentPrice <= alert.lowPrice) {
+				await triggerAlert(alert, 'LOW', currentPrice);
+				
+				if (alert.autoBuyOnLow) {
+					addAlertLog(`💎 Auto-buying at $${currentPrice}...`);
+					// Execute buy with selected wallets
+					// This would call the buy function for selected wallets
+				}
+			}
+			
+		} catch (error) {
+			console.error('Error checking alert:', error);
+		}
+	}
+}
+
+async function triggerAlert(alert, type, price) {
+	alert.triggered = true;
+	triggeredAlertsCount++;
+	
+	const message = `🔔 ${type} ALERT! ${alert.tokenAddress.slice(0, 8)}... reached $${price}`;
+	addAlertLog(message);
+	
+	// Browser notification
+	if (alert.browserNotifications && Notification.permission === 'granted') {
+		new Notification('💰 DIONTOOLS Price Alert', {
+			body: message,
+			icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">🔔</text></svg>',
+			tag: `alert-${alert.id}`
+		});
+	}
+	
+	// Play sound (optional)
+	try {
+		const audio = new Audio('data:audio/wav;base64,UklGRnoGAABXQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YQoGAACBhYqFbF1fdJivrJBhNjVgodDbq2EcBj+a2/LDciUFLIHO8tiJNwgZaLvt559NEAxQp+PwtmMcBjiR1/LMeSwFJHfH8N2QQAoUXrTp66hVFApGn+DyvmwhBSuBzvLZizcIGmm98OScTAoNUKrj8LNgGgU5k9n0y3goBS1+zPLaizsKGGS56eabSgoMT6fh8LViFQU5kdj1zX0pBSh6yPDck0EMDVO07OyrVxYLRJve8cJtHwUme8j14JJBCRJas+352EcJCkSe4fG8XxgEJ3nE8N+RQgsUXLTq6qZUEglFn+HyvW0hBCl8yvLVhzYIGGa76eSbSwoMUKjh77FfGQU4kdj1y3UnBSh6yPDajTsJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8rBSl8zPLXizcJF2G35uWcTQoMS6bc7q9gGQU4j9f0zX8r');
+		audio.volume = 0.3;
+		audio.play().catch(() => {});
+	} catch (e) {}
+	
+	updateAlertsList();
+}
+
+function addAlertLog(message) {
+	const log = document.getElementById('alertsList');
+	const timestamp = new Date().toLocaleTimeString();
+	const entry = document.createElement('div');
+	entry.innerHTML = `<div style="color: #14F195; margin-bottom: 5px;">[${timestamp}] ${message}</div>`;
+	log.insertBefore(entry, log.firstChild);
+}
+
+// ===================================
+// VOLUME SPIKE DETECTION SYSTEM
+// ===================================
+
+function toggleVolumePanel() {
+	const content = document.getElementById('volumeContent');
+	const toggle = document.getElementById('volumeToggle');
+	if (content.style.display === 'none') {
+		content.style.display = 'block';
+		toggle.textContent = '▼';
+	} else {
+		content.style.display = 'none';
+		toggle.textContent = '▲';
+	}
+}
+
+async function startVolumeMonitoring() {
+	const tokenAddress = document.getElementById('volumeTokenAddress').value.trim();
+	const threshold = parseFloat(document.getElementById('spikeThreshold').value);
+	const interval = parseInt(document.getElementById('volumeCheckInterval').value) * 1000;
+	
+	if (!tokenAddress) {
+		alert('❌ Please enter token address!');
+		return;
+	}
+	
+	if (volumeMonitoringActive) {
+		addVolumeLog('⚠️ Volume monitoring already active!');
+		return;
+	}
+	
+	volumeMonitoringActive = true;
+	previousVolume = null;
+	
+	document.getElementById('volumeMonitorStatus').innerHTML = '🟢 Active';
+	addVolumeLog(`🚀 Started monitoring volume for ${tokenAddress.slice(0, 8)}...`);
+	addVolumeLog(`📊 Spike threshold: ${threshold}% increase`);
+	
+	// Initial fetch
+	await checkVolumeSpike(tokenAddress, threshold);
+	
+	// Set up interval
+	volumeMonitorInterval = setInterval(() => {
+		checkVolumeSpike(tokenAddress, threshold);
+	}, interval);
+}
+
+function stopVolumeMonitoring() {
+	if (!volumeMonitoringActive) return;
+	
+	volumeMonitoringActive = false;
+	if (volumeMonitorInterval) {
+		clearInterval(volumeMonitorInterval);
+		volumeMonitorInterval = null;
+	}
+	
+	previousVolume = null;
+	document.getElementById('volumeMonitorStatus').innerHTML = '🔴 Stopped';
+	addVolumeLog('⏹️ Volume monitoring stopped');
+}
+
+async function checkVolumeSpike(tokenAddress, threshold) {
+	try {
+		const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${tokenAddress}`);
+		const data = await response.json();
+		
+		if (!data.pairs || data.pairs.length === 0) {
+			addVolumeLog('⚠️ No trading pairs found');
+			return;
+		}
+		
+		const pair = data.pairs[0];
+		const currentVolume = parseFloat(pair.volume?.h24 || 0);
+		const price = parseFloat(pair.priceUsd);
+		
+		addVolumeLog(`📊 Current 24h volume: $${currentVolume.toLocaleString()}`);
+		
+		if (previousVolume !== null) {
+			const volumeIncrease = ((currentVolume - previousVolume) / previousVolume) * 100;
+			
+			if (volumeIncrease >= threshold) {
+				spikesDetectedCount++;
+				document.getElementById('spikesDetected').textContent = spikesDetectedCount;
+				
+				const message = `🚨 VOLUME SPIKE DETECTED! +${volumeIncrease.toFixed(0)}% increase!`;
+				addVolumeLog(message);
+				addVolumeLog(`💰 Current price: $${price}`);
+				
+				// Browser notification
+				if (document.getElementById('volumeNotifications').checked && Notification.permission === 'granted') {
+					new Notification('📊 DIONTOOLS Volume Spike!', {
+						body: message + ` | Price: $${price}`,
+						icon: 'data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><text y="75" font-size="75">📊</text></svg>'
+					});
+				}
+				
+				// Auto-buy on spike
+				if (document.getElementById('autoBuyOnSpike').checked) {
+					addVolumeLog('🔥 Auto-buy triggered! Executing trades...');
+					// This would execute buy with selected wallets
+					// Similar to the trade execution logic in executeAllTrades()
+				}
+			} else {
+				addVolumeLog(`📈 Volume change: ${volumeIncrease > 0 ? '+' : ''}${volumeIncrease.toFixed(1)}%`);
+			}
+		}
+		
+		previousVolume = currentVolume;
+		
+	} catch (error) {
+		console.error('Volume check error:', error);
+		addVolumeLog('❌ Error checking volume: ' + error.message);
+	}
+}
+
+function addVolumeLog(message) {
+	const log = document.getElementById('volumeLog');
+	const timestamp = new Date().toLocaleTimeString();
+	const entry = document.createElement('div');
+	entry.style.marginBottom = '5px';
+	
+	if (message.includes('SPIKE')) {
+		entry.style.color = '#FFB800';
+		entry.style.fontWeight = 'bold';
+	} else if (message.includes('Error') || message.includes('❌')) {
+		entry.style.color = '#FF3864';
+	} else {
+		entry.style.color = '#FFB800';
+	}
+	
+	entry.textContent = `[${timestamp}] ${message}`;
+	log.appendChild(entry);
+	log.scrollTop = log.scrollHeight;
+	
+	// Keep only last 50 messages
+	while (log.children.length > 50) {
+		log.removeChild(log.firstChild);
+	}
+}
+

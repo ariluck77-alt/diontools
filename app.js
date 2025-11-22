@@ -1652,3 +1652,17 @@ document.addEventListener('DOMContentLoaded', () => {
 	console.log('✅ Solana Pro Trading Suite initialized');
 	console.log('💡 Enter a token address to start DEX monitoring');
 });
+
+// Toggle Trade Settings visibility
+function toggleTradeSettings() {
+	const content = document.getElementById('tradeSettingsContent');
+	const toggle = document.getElementById('tradeSettingsToggle');
+	
+	if (content.style.display === 'none') {
+		content.style.display = 'grid';
+		toggle.textContent = '▼';
+	} else {
+		content.style.display = 'none';
+		toggle.textContent = '▶';
+	}
+}

@@ -29,7 +29,7 @@ body {
 
 .logo {
 	padding: 0 20px 30px;
-	font-size: 24px;
+	font-size: 18px;
 	font-weight: 700;
 	display: flex;
 	align-items: center;
@@ -75,11 +75,11 @@ body {
 }
 
 .nav-icon {
-	font-size: 18px;
+	font-size: 14px;
 }
 
 .nav-text {
-	font-size: 14px;
+	font-size: 11px;
 	font-weight: 500;
 }
 
@@ -142,7 +142,7 @@ body {
 }
 
 .page-header h2 {
-	font-size: 28px;
+	font-size: 20px;
 	font-weight: 700;
 }
 
@@ -151,10 +151,10 @@ body {
 	background: linear-gradient(135deg, #00ff88, #00cc70);
 	color: #000;
 	border: none;
-	padding: 12px 24px;
+	padding: 10px 20px;
 	border-radius: 8px;
 	font-weight: 600;
-	font-size: 14px;
+	font-size: 12px;
 	cursor: pointer;
 	transition: transform 0.2s;
 }
@@ -168,10 +168,10 @@ body {
 	background: linear-gradient(135deg, #00ff88, #00cc70);
 	color: #000;
 	border: none;
-	padding: 16px;
+	padding: 12px;
 	border-radius: 8px;
 	font-weight: 700;
-	font-size: 16px;
+	font-size: 13px;
 	cursor: pointer;
 	transition: transform 0.2s;
 	margin-top: 20px;
@@ -257,9 +257,9 @@ body {
 	background: #0a0a0a;
 	border: 1px solid #333;
 	border-radius: 8px;
-	padding: 12px;
+	padding: 10px;
 	color: #fff;
-	font-size: 14px;
+	font-size: 12px;
 	transition: border-color 0.2s;
 }
 
@@ -309,7 +309,7 @@ body {
 }
 
 .stat-label {
-	font-size: 11px;
+	font-size: 9px;
 	color: #888;
 	font-weight: 600;
 	letter-spacing: 0.5px;
@@ -317,7 +317,7 @@ body {
 }
 
 .stat-value {
-	font-size: 20px;
+	font-size: 16px;
 	font-weight: 700;
 	color: #fff;
 }
@@ -355,7 +355,7 @@ body {
 }
 
 .holders-section h3 {
-	font-size: 18px;
+	font-size: 14px;
 	font-weight: 700;
 	margin-bottom: 20px;
 }
@@ -375,9 +375,9 @@ body {
 }
 
 .holders-table th {
-	padding: 12px;
+	padding: 10px;
 	text-align: left;
-	font-size: 12px;
+	font-size: 10px;
 	font-weight: 600;
 	color: #888;
 	text-transform: uppercase;
@@ -386,8 +386,8 @@ body {
 }
 
 .holders-table td {
-	padding: 14px 12px;
-	font-size: 13px;
+	padding: 12px 10px;
+	font-size: 11px;
 	border-bottom: 1px solid #1a1a1a;
 }
 
@@ -397,9 +397,9 @@ body {
 
 .badge {
 	display: inline-block;
-	padding: 4px 8px;
+	padding: 3px 6px;
 	border-radius: 4px;
-	font-size: 10px;
+	font-size: 8px;
 	font-weight: 700;
 	margin-right: 8px;
 }
@@ -412,16 +412,16 @@ body {
 .address {
 	font-family: 'Courier New', monospace;
 	color: #888;
-	font-size: 12px;
+	font-size: 10px;
 }
 
 .btn-amount {
 	background: #1a1a1a;
 	color: #fff;
 	border: 1px solid #333;
-	padding: 6px 12px;
+	padding: 5px 10px;
 	border-radius: 4px;
-	font-size: 11px;
+	font-size: 9px;
 	cursor: pointer;
 	margin-right: 6px;
 	transition: all 0.2s;

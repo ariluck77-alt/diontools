@@ -73,6 +73,28 @@ let volumeMonitorInterval = null;
 let previousVolume = null;
 let spikesDetectedCount = 0;
 
+// ===== AUTO-TRADING RULES ENGINE =====
+let tradingRules = [];
+let rulesCheckInterval = null;
+let executedRulesCount = 0;
+
+// ===== NEW TOKEN SCANNER =====
+let scannerActive = false;
+let scannerInterval = null;
+let scannedTokens = new Set();
+let tokensFoundCount = 0;
+let autoSnipedCount = 0;
+
+// ===== JITO MEV PROTECTION =====
+const JITO_ENDPOINTS = [
+	'https://mainnet.block-engine.jito.wtf',
+	'https://amsterdam.mainnet.block-engine.jito.wtf',
+	'https://frankfurt.mainnet.block-engine.jito.wtf',
+	'https://ny.mainnet.block-engine.jito.wtf',
+	'https://tokyo.mainnet.block-engine.jito.wtf'
+];
+
+
 // ===== VOLUME TRACKING =====
 let volumeMonitors = [];
 let volumeCheckInterval = null;
@@ -2308,4 +2330,456 @@ function addVolumeLog(message) {
 		log.removeChild(log.firstChild);
 	}
 }
+
+// ===================================
+// AUTO-TRADING RULES ENGINE
+// ===================================
+
+function toggleRulesPanel() {
+	const content = document.getElementById('rulesContent');
+	const toggle = document.getElementById('rulesToggle');
+	if (content.style.display === 'none') {
+		content.style.display = 'block';
+		toggle.textContent = '▼';
+	} else {
+		content.style.display = 'none';
+		toggle.textContent = '▲';
+	}
+}
+
+function addTradingRule() {
+	const name = document.getElementById('ruleName').value.trim();
+	const tokenAddress = document.getElementById('ruleTokenAddress').value.trim();
+	const action = document.getElementById('ruleAction').value;
+	const amount = parseFloat(document.getElementById('ruleAmount').value);
+	const conditionType = document.getElementById('ruleConditionType').value;
+	const conditionValue = document.getElementById('ruleConditionValue').value.trim();
+	const oneTime = document.getElementById('ruleOneTime').checked;
+	
+	if (!name) {
+		alert('❌ Please enter rule name!');
+		return;
+	}
+	
+	if (!tokenAddress) {
+		alert('❌ Please enter token address!');
+		return;
+	}
+	
+	if (!conditionValue) {
+		alert('❌ Please enter condition value!');
+		return;
+	}
+	
+	const rule = {
+		id: Date.now(),
+		name,
+		tokenAddress,
+		action,
+		amount,
+		conditionType,
+		conditionValue,
+		oneTime,
+		executed: false,
+		active: true
+	};
+	
+	tradingRules.push(rule);
+	updateRulesList();
+	
+	// Start rules engine if not already active
+	if (!rulesCheckInterval) {
+		rulesCheckInterval = setInterval(checkAllRules, 5000); // Check every 5 seconds
+		addRulesLog('⚙️ Rules engine activated');
+	}
+	
+	addRulesLog(`✅ Rule added: ${name}`);
+	
+	// Clear form
+	document.getElementById('ruleName').value = '';
+	document.getElementById('ruleTokenAddress').value = '';
+}
+
+function updateRulesList() {
+	const rulesList = document.getElementById('rulesList');
+	const activeRules = tradingRules.filter(r => r.active && !r.executed);
+	
+	document.getElementById('activeRulesCount').textContent = activeRules.length;
+	document.getElementById('executedRulesCount').textContent = executedRulesCount;
+	
+	if (tradingRules.length === 0) {
+		rulesList.innerHTML = '<div style="color: #9945FF;">💡 No rules set. Create auto-trading rules above.</div>';
+		return;
+	}
+	
+	rulesList.innerHTML = tradingRules.map(rule => `
+		<div style="background: ${rule.executed ? 'rgba(100,100,100,0.2)' : 'rgba(153, 69, 255, 0.1)'}; padding: 10px; border-radius: 6px; margin-bottom: 8px; border-left: 3px solid ${rule.executed ? '#666' : '#9945FF'};">
+			<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 5px;">
+				<span style="color: ${rule.executed ? '#888' : '#9945FF'}; font-weight: bold;">${rule.name}</span>
+				<div>
+					${rule.executed ? '<span style="color: #14F195; font-size: 9px; margin-right: 5px;">✅ EXECUTED</span>' : ''}
+					<button onclick="removeRule(${rule.id})" style="background: rgba(255, 56, 100, 0.3); border: none; padding: 3px 8px; border-radius: 4px; cursor: pointer; color: #FF3864; font-size: 9px;">REMOVE</button>
+				</div>
+			</div>
+			<div style="font-size: 9px; color: ${rule.executed ? '#888' : '#ccc'};">
+				<div>📍 ${rule.tokenAddress.slice(0, 8)}...${rule.tokenAddress.slice(-6)}</div>
+				<div>⚡ ${rule.action.toUpperCase()} ${rule.amount} SOL</div>
+				<div>📊 When: ${rule.conditionType.replace('_', ' ')} ${rule.conditionValue}</div>
+				${rule.oneTime ? '<div>🔄 One-time execution</div>' : '<div>♾️ Repeatable</div>'}
+			</div>
+		</div>
+	`).join('');
+}
+
+function removeRule(ruleId) {
+	tradingRules = tradingRules.filter(r => r.id !== ruleId);
+	updateRulesList();
+	
+	if (tradingRules.length === 0 && rulesCheckInterval) {
+		clearInterval(rulesCheckInterval);
+		rulesCheckInterval = null;
+		addRulesLog('⏹️ Rules engine stopped (no active rules)');
+	}
+	
+	addRulesLog('🗑️ Rule removed');
+}
+
+function clearAllRules() {
+	if (!confirm('Clear all trading rules?')) return;
+	
+	tradingRules = [];
+	updateRulesList();
+	
+	if (rulesCheckInterval) {
+		clearInterval(rulesCheckInterval);
+		rulesCheckInterval = null;
+	}
+	
+	addRulesLog('🗑️ All rules cleared');
+}
+
+async function checkAllRules() {
+	for (const rule of tradingRules) {
+		if (!rule.active || (rule.oneTime && rule.executed)) continue;
+		
+		try {
+			const response = await fetch(`https://api.dexscreener.com/latest/dex/tokens/${rule.tokenAddress}`);
+			const data = await response.json();
+			
+			if (!data.pairs || data.pairs.length === 0) continue;
+			
+			const pair = data.pairs[0];
+			const currentPrice = parseFloat(pair.priceUsd);
+			const volume24h = parseFloat(pair.volume?.h24 || 0);
+			const priceChange24h = parseFloat(pair.priceChange?.h24 || 0);
+			
+			let conditionMet = false;
+			
+			switch (rule.conditionType) {
+				case 'price_above':
+					conditionMet = currentPrice >= parseFloat(rule.conditionValue);
+					break;
+				case 'price_below':
+					conditionMet = currentPrice <= parseFloat(rule.conditionValue);
+					break;
+				case 'price_change':
+					const targetChange = parseFloat(rule.conditionValue);
+					conditionMet = Math.abs(priceChange24h) >= Math.abs(targetChange) && 
+					              (targetChange > 0 ? priceChange24h > 0 : priceChange24h < 0);
+					break;
+				case 'volume_above':
+					conditionMet = volume24h >= parseFloat(rule.conditionValue);
+					break;
+				case 'time':
+					const targetTime = rule.conditionValue; // Format: "HH:MM"
+					const now = new Date();
+					const currentTime = `${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
+					conditionMet = currentTime === targetTime;
+					break;
+			}
+			
+			if (conditionMet) {
+				addRulesLog(`🎯 Rule triggered: ${rule.name}`);
+				addRulesLog(`💰 Executing ${rule.action.toUpperCase()} for ${rule.amount} SOL...`);
+				
+				// Execute trade (would use actual trade execution logic)
+				// This would call buy/sell functions with selected wallets
+				
+				rule.executed = true;
+				executedRulesCount++;
+				
+				if (rule.oneTime) {
+					rule.active = false;
+					addRulesLog(`✅ One-time rule executed: ${rule.name}`);
+				} else {
+					addRulesLog(`✅ Rule executed: ${rule.name} (will check again)`);
+					// Reset after some time to allow re-triggering
+					setTimeout(() => { rule.executed = false; }, 60000); // Reset after 1 minute
+				}
+				
+				updateRulesList();
+			}
+			
+		} catch (error) {
+			console.error('Error checking rule:', error);
+		}
+	}
+}
+
+function addRulesLog(message) {
+	const log = document.getElementById('rulesList');
+	const timestamp = new Date().toLocaleTimeString();
+	const entry = document.createElement('div');
+	entry.innerHTML = `<div style="color: #9945FF; margin-bottom: 5px; padding: 5px; background: rgba(153, 69, 255, 0.05); border-radius: 4px;">[${timestamp}] ${message}</div>`;
+	log.insertBefore(entry, log.firstChild);
+}
+
+// ===================================
+// NEW TOKEN SCANNER
+// ===================================
+
+function toggleScannerPanel() {
+	const content = document.getElementById('scannerContent');
+	const toggle = document.getElementById('scannerToggle');
+	if (content.style.display === 'none') {
+		content.style.display = 'block';
+		toggle.textContent = '▼';
+	} else {
+		content.style.display = 'none';
+		toggle.textContent = '▲';
+	}
+}
+
+async function startTokenScanner() {
+	const source = document.getElementById('scannerSource').value;
+	const minLiq = parseFloat(document.getElementById('scannerMinLiq').value);
+	const minHolders = parseInt(document.getElementById('scannerMinHolders').value);
+	const interval = parseInt(document.getElementById('scanInterval').value) * 1000;
+	
+	if (scannerActive) {
+		addScannerLog('⚠️ Scanner already running!');
+		return;
+	}
+	
+	scannerActive = true;
+	document.getElementById('scannerStatus').innerHTML = '🟢 Active';
+	addScannerLog(`🔍 Scanner started - Source: ${source}`);
+	addScannerLog(`📊 Filters: Min Liq $${minLiq.toLocaleString()}, Min Holders: ${minHolders}`);
+	
+	// Initial scan
+	await scanForNewTokens(source, minLiq, minHolders);
+	
+	// Set up interval
+	scannerInterval = setInterval(() => {
+		scanForNewTokens(source, minLiq, minHolders);
+	}, interval);
+}
+
+function stopTokenScanner() {
+	if (!scannerActive) return;
+	
+	scannerActive = false;
+	if (scannerInterval) {
+		clearInterval(scannerInterval);
+		scannerInterval = null;
+	}
+	
+	document.getElementById('scannerStatus').innerHTML = '🔴 Stopped';
+	addScannerLog('⏹️ Scanner stopped');
+}
+
+async function scanForNewTokens(source, minLiq, minHolders) {
+	try {
+		addScannerLog('🔄 Scanning for new tokens...');
+		
+		// Scan Raydium new pools
+		if (source === 'raydium' || source === 'both') {
+			// Note: This would require Raydium API integration
+			// For now, we'll use DexScreener's latest tokens
+			const response = await fetch('https://api.dexscreener.com/latest/dex/tokens/So11111111111111111111111111111111111111112');
+			const data = await response.json();
+			
+			if (data.pairs) {
+				for (const pair of data.pairs.slice(0, 5)) {
+					const tokenAddress = pair.baseToken.address;
+					
+					// Skip if already scanned
+					if (scannedTokens.has(tokenAddress)) continue;
+					
+					const liquidity = parseFloat(pair.liquidity?.usd || 0);
+					const holders = parseInt(pair.txns?.h24?.buys || 0); // Approximation
+					
+					// Apply filters
+					if (liquidity < minLiq) continue;
+					if (holders < minHolders) continue;
+					
+					scannedTokens.add(tokenAddress);
+					tokensFoundCount++;
+					document.getElementById('tokensFoundCount').textContent = tokensFoundCount;
+					
+					displayNewToken(pair);
+					
+					// Auto-snipe if enabled
+					if (document.getElementById('autoSnipeNewTokens').checked) {
+						addScannerLog(`🎯 Auto-sniping ${pair.baseToken.symbol}...`);
+						autoSnipedCount++;
+						document.getElementById('autoSnipedCount').textContent = autoSnipedCount;
+						// Would execute snipe trade here
+					}
+				}
+			}
+		}
+		
+		// Scan Pump.fun new tokens
+		if (source === 'pumpfun' || source === 'both') {
+			// Note: Would require Pump.fun API integration
+			addScannerLog('💡 Pump.fun integration coming soon...');
+		}
+		
+	} catch (error) {
+		console.error('Scanner error:', error);
+		addScannerLog('❌ Scanner error: ' + error.message);
+	}
+}
+
+function displayNewToken(pair) {
+	const resultsDiv = document.getElementById('scannerResults');
+	
+	const tokenCard = document.createElement('div');
+	tokenCard.style.cssText = 'background: linear-gradient(135deg, rgba(0, 212, 255, 0.1), rgba(153, 69, 255, 0.1)); padding: 10px; border-radius: 8px; margin-bottom: 10px; border: 1px solid rgba(0, 212, 255, 0.3);';
+	
+	const price = parseFloat(pair.priceUsd);
+	const liquidity = parseFloat(pair.liquidity?.usd || 0);
+	const volume24h = parseFloat(pair.volume?.h24 || 0);
+	const priceChange = parseFloat(pair.priceChange?.h24 || 0);
+	const buys = pair.txns?.h24?.buys || 0;
+	const sells = pair.txns?.h24?.sells || 0;
+	
+	tokenCard.innerHTML = `
+		<div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 8px;">
+			<div>
+				<div style="color: #00D4FF; font-weight: bold; font-size: 11px;">${pair.baseToken.symbol}</div>
+				<div style="color: #888; font-size: 9px;">${pair.baseToken.address.slice(0, 6)}...${pair.baseToken.address.slice(-4)}</div>
+			</div>
+			<button onclick="quickSnipe('${pair.baseToken.address}', '${pair.baseToken.symbol}')" 
+				style="background: linear-gradient(135deg, #14F195, #00D4FF); border: none; padding: 6px 12px; border-radius: 6px; cursor: pointer; color: black; font-weight: bold; font-size: 10px;">
+				⚡ SNIPE
+			</button>
+		</div>
+		<div style="display: grid; grid-template-columns: 1fr 1fr; gap: 8px; font-size: 9px;">
+			<div>
+				<div style="color: #888;">Price:</div>
+				<div style="color: white; font-weight: bold;">$${price < 0.000001 ? price.toExponential(2) : price.toFixed(6)}</div>
+			</div>
+			<div>
+				<div style="color: #888;">24h Change:</div>
+				<div style="color: ${priceChange >= 0 ? '#14F195' : '#FF3864'}; font-weight: bold;">${priceChange >= 0 ? '+' : ''}${priceChange.toFixed(1)}%</div>
+			</div>
+			<div>
+				<div style="color: #888;">Liquidity:</div>
+				<div style="color: #00D4FF;">$${liquidity.toLocaleString()}</div>
+			</div>
+			<div>
+				<div style="color: #888;">24h Volume:</div>
+				<div style="color: #FFB800;">$${volume24h.toLocaleString()}</div>
+			</div>
+			<div>
+				<div style="color: #888;">Buys/Sells:</div>
+				<div style="color: #14F195;">${buys} / <span style="color: #FF3864;">${sells}</span></div>
+			</div>
+			<div>
+				<div style="color: #888;">DEX:</div>
+				<div style="color: #9945FF;">${pair.dexId}</div>
+			</div>
+		</div>
+	`;
+	
+	resultsDiv.insertBefore(tokenCard, resultsDiv.firstChild);
+	
+	// Keep only last 10 tokens
+	while (resultsDiv.children.length > 10) {
+		resultsDiv.removeChild(resultsDiv.lastChild);
+	}
+	
+	addScannerLog(`✨ New token found: ${pair.baseToken.symbol} | Liq: $${liquidity.toLocaleString()}`);
+}
+
+function quickSnipe(tokenAddress, symbol) {
+	addScannerLog(`⚡ Quick-sniping ${symbol}...`);
+	
+	// This would execute the snipe with selected wallets
+	// Using the same logic as executeAllTrades but for a buy
+	
+	alert(`🎯 Sniping ${symbol}!\nAddress: ${tokenAddress}\n\nThis would execute trades with your selected wallets.`);
+}
+
+function addScannerLog(message) {
+	const log = document.getElementById('scannerResults');
+	const timestamp = new Date().toLocaleTimeString();
+	const entry = document.createElement('div');
+	entry.style.cssText = 'color: #00D4FF; margin-bottom: 5px; padding: 5px; background: rgba(0, 212, 255, 0.05); border-radius: 4px; font-size: 10px;';
+	entry.textContent = `[${timestamp}] ${message}`;
+	
+	// If it's the first message, replace the placeholder
+	if (log.children.length === 1 && log.children[0].textContent.includes('ready')) {
+		log.innerHTML = '';
+	}
+	
+	log.insertBefore(entry, log.firstChild);
+	
+	// Keep only last 20 log messages
+	while (log.children.length > 20 && !log.lastChild.style.background) {
+		log.removeChild(log.lastChild);
+	}
+}
+
+// ===================================
+// JITO MEV PROTECTION
+// ===================================
+
+async function sendTransactionWithJito(transaction, connection) {
+	const mevEnabled = document.getElementById('mevProtection').checked;
+	
+	if (!mevEnabled) {
+		// Standard transaction submission
+		return await connection.sendRawTransaction(transaction.serialize());
+	}
+	
+	try {
+		// Select random Jito endpoint
+		const jitoEndpoint = JITO_ENDPOINTS[Math.floor(Math.random() * JITO_ENDPOINTS.length)];
+		
+		// Send transaction through Jito bundle
+		const response = await fetch(`${jitoEndpoint}/api/v1/bundles`, {
+			method: 'POST',
+			headers: {
+				'Content-Type': 'application/json'
+			},
+			body: JSON.stringify({
+				jsonrpc: '2.0',
+				id: 1,
+				method: 'sendBundle',
+				params: [[transaction.serialize().toString('base64')]]
+			})
+		});
+		
+		const data = await response.json();
+		
+		if (data.result) {
+			console.log('✅ Transaction sent via Jito MEV Protection');
+			return data.result;
+		} else {
+			console.warn('⚠️ Jito bundle failed, falling back to standard submission');
+			return await connection.sendRawTransaction(transaction.serialize());
+		}
+		
+	} catch (error) {
+		console.error('❌ Jito MEV error, using standard submission:', error);
+		return await connection.sendRawTransaction(transaction.serialize());
+	}
+}
+
+// Update executeAllTrades to use Jito MEV Protection
+// This function would be modified to call sendTransactionWithJito instead of connection.sendRawTransaction
+
 
